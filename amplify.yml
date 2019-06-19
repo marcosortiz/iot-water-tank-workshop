@@ -1,0 +1,37 @@
+version: 0.1
+backend:
+  phases:
+    preBuild:
+      commands:
+        - yum -y install python36 python36-devel python36-pip ruby24 jq
+        - /bin/bash -c "mv -f /usr/bin/python /usr/bin/python2 && ln -fs /usr/bin/python3 /usr/bin/python && pip-3.6 install awscli && rm -rf /var/cache/apk/*"
+        - /bin/bash -c "ln -fs /usr/bin/ruby2.4 /usr/bin/ruby && ln -fs /usr/bin/gem2.4 /usr/bin/gem && gem install bundler"
+        - pip-3.6 install --user aws-sam-cli
+        - USER_BASE_PATH=$(python -m site --user-base)
+        - export PATH=$PATH:$USER_BASE_PATH/bin
+        - export ACCOUNT_ID=$(aws sts get-caller-identity|jq -r ".Account")
+        - export REGION=$AWS_REGION
+        - export STACK_NAME="iot-water-tank-workshop-${ACCOUNT_ID}"
+        - export SAM_BUCKET="${STACK_NAME}-${REGION}-sam"
+        - echo $REGION
+        - echo $SAM_BUCKET
+        - echo $STACK_NAME
+    build:
+      commands:
+        - ./bin/deploy-backend.sh
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd frontend
+    build:
+      commands:
+        - ./bin/build.sh
+  artifacts:
+    baseDirectory: frontend/build
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - /
+      - /index.html
