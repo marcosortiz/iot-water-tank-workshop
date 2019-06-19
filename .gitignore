@@ -12,3 +12,5 @@ frontend/config/config.json
 
 # ----- Backend -----
 backend/config/config.json
+
+./config/config.json
