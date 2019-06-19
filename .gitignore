@@ -1,0 +1,14 @@
+# ----- AWS SAM -----
+packaged.yaml
+.aws-sam
+backend/vendor
+
+# ----- Node -----
+node_modules
+
+# ----- Frontend -----
+frontend/src/config/config.json
+frontend/config/config.json
+
+# ----- Backend -----
+backend/config/config.json

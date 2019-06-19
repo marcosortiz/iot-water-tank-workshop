@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+    Username:
+        Type: String
+        AllowedPattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"        
+        Description: A valid email address is required
+
+Resources: 
+    UserPool:
+        Type: "AWS::Cognito::UserPool"
+        Properties:
+            AutoVerifiedAttributes:
+                - email
+            MfaConfiguration: 'OFF'
+            Schema:
+                - 
+                    AttributeDataType: String
+                    Name: email
+                    Required: true
+            AdminCreateUserConfig: 
+                AllowAdminCreateUserOnly: true
+                InviteMessageTemplate:
+                    EmailMessage:
+                        Fn::Sub: |
+                            <p>You are invited to join the AWS IoT Water Tank Workshop. Your temporary password is as follows:</p>
+                            <p>
+                            username: {username} <br />
+                            Password: <strong>{####}</strong>
+                            </p>
+                            <p>
+                            Please sign in to the GUI with your username and temporary password provided above.
+                            </p>
+                    EmailSubject: Your temporary password for the AWS IoT Water Tank Workshop
+            EmailVerificationMessage: "Your AWS IoT Water Tank Workshop verification code is {####}."
+            UsernameAttributes:
+                - email
+    User:
+        Type: AWS::Cognito::UserPoolUser
+        Properties:
+            DesiredDeliveryMediums: 
+                - EMAIL
+            UserAttributes: 
+                - Name: email
+                  Value: !Ref Username
+            Username: !Ref Username
+            UserPoolId: !Ref UserPool
+    UserPoolClient:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            GenerateSecret: false
+            RefreshTokenValidity: 200
+            UserPoolId: !Ref UserPool
+    IdentityPool:
+        Type: AWS::Cognito::IdentityPool
+        Properties:
+            AllowUnauthenticatedIdentities: false
+            CognitoIdentityProviders:
+                - 
+                    ClientId: !Ref UserPoolClient
+                    ProviderName: !GetAtt UserPool.ProviderName
+    IdentityPoolAuthRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    - 
+                        Effect: "Allow"
+                        Principal:
+                            Federated:
+                                - "cognito-identity.amazonaws.com"
+                        Action:
+                            - "sts:AssumeRoleWithWebIdentity"
+                        Condition:
+                            StringEquals:
+                                cognito-identity.amazonaws.com:aud: !Ref IdentityPool
+                            ForAnyValue:StringLike:
+                                cognito-identity.amazonaws.com:amr: authenticated
+            Path: "/"
+            Policies:
+                - 
+                    PolicyName: !Sub '${AWS::StackName}-sts'
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            - 
+                                Effect: Allow
+                                Action:
+                                    - mobileanalytics:PutEvents
+                                    - cognito-sync:*
+                                    - cognito-identity:*
+                                Resource: '*'
+    IdentityPoolRoleAttachment:
+        Type: AWS::Cognito::IdentityPoolRoleAttachment
+        Properties:
+            IdentityPoolId: !Ref IdentityPool
+            Roles:
+                authenticated: !GetAtt IdentityPoolAuthRole.Arn
+Outputs:
+    UserPoolId:
+        Description: UserPoolId id
+        Value: !Ref UserPool
+    IdentityPoolId:
+        Description: IdentityPoolId id
+        Value: !Ref IdentityPool
+    userPoolWebClientId:
+        Description: The user pool web client id
+        Value: !Ref UserPoolClient
