@@ -11,7 +11,9 @@ backend:
         - export PATH=$PATH:$USER_BASE_PATH/bin
         - export ACCOUNT_ID=$(aws sts get-caller-identity|jq -r ".Account")
         - export REGION=$AWS_REGION
-        - export STACK_NAME="iot-water-tank-workshop-${ACCOUNT_ID}"
+        - DEFAULT_STACK_NAME="iot-water-tank-workshop-${ACCOUNT_ID}"
+        - export STACK_NAME="${STACK_NAME:-$DEFAULT_STACK_NAME}"
+        - echo $STACK_NAME
         - export SAM_BUCKET="${STACK_NAME}-${REGION}-sam"
         - echo $REGION
         - echo $SAM_BUCKET
