@@ -36,6 +36,43 @@ Resources:
             EmailVerificationMessage: "Your AWS IoT Water Tank Workshop verification code is {####}."
             UsernameAttributes:
                 - email
+    AdminRole:
+        Type: AWS::IAM::Role
+        Properties:
+            AssumeRolePolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    - 
+                        Effect: "Allow"
+                        Principal:
+                            Federated:
+                                - "cognito-identity.amazonaws.com"
+                        Action:
+                            - "sts:AssumeRoleWithWebIdentity"
+                        Condition:
+                            StringEquals:
+                                cognito-identity.amazonaws.com:aud: !Ref IdentityPool
+            Path: "/"
+            Policies:
+                - 
+                    PolicyName: !Sub '${AWS::StackName}-ddb'
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            - 
+                                Effect: Allow
+                                Action:
+                                    - dynamodb:GetItem
+                                    - dynamodb:PutItem
+                                    - dynamodb:Query
+                                Resource: '*'
+    AdminGroup:
+        Type: AWS::Cognito::UserPoolGroup
+        Properties: 
+            Description: Administrators
+            GroupName: Admins
+            RoleArn: !GetAtt AdminRole.Arn
+            UserPoolId: !Ref UserPool
     User:
         Type: AWS::Cognito::UserPoolUser
         Properties:
@@ -98,6 +135,505 @@ Resources:
             IdentityPoolId: !Ref IdentityPool
             Roles:
                 authenticated: !GetAtt IdentityPoolAuthRole.Arn
+    IotTankPolicy:
+        Type: AWS::IoT::Policy
+        Properties:
+            PolicyDocument: !Sub |
+                {
+                    "Version": "2012-10-17",
+                    "Statement": [{
+                        "Effect": "Allow",
+                        "Action":["iot:Connect"],
+                        "Resource": ["*"]
+                    },{
+                        "Effect": "Allow",
+                        "Action":[
+                            "iot:Publish"
+                        ],
+                        "Resource": [
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/telemetry",
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/cmds/ack"
+                        ]
+                    },{
+                        "Effect": "Allow",
+                        "Action":[
+                            "iot:Subscribe"
+                        ],
+                        "Resource": [
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/tanks/${!iot:ClientId}/cmds"
+                        ]
+                    },{
+                        "Effect": "Allow",
+                        "Action":[
+                            "iot:Receive"
+                        ],
+                        "Resource": [
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/cmds"
+                        ]
+                    }]
+                }
+            PolicyName: TankPolicy
+    ThingsTable:
+        Type: AWS::Serverless::SimpleTable
+        Properties:
+            PrimaryKey:
+                Name: thingName
+                Type: String
+            ProvisionedThroughput:
+                ReadCapacityUnits: 1
+                WriteCapacityUnits: 1
+    iotKeysAndCertsBucket:
+        Type: AWS::S3::Bucket
+    AttachCertToThing:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/attachCertToThing.attachCertToThing
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:AttachThingPrincipal
+                      Resource: '*'
+    AttachPolicyToCert:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/attachPolicyToCert.attachPolicyToCert
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    POLICY_NAME: !Ref IotTankPolicy
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:AttachPolicy
+                      Resource: '*'
+    CheckIfThingExists:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/checkIfThingExists.checkIfThingExists
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:DescribeThing
+                      Resource: '*'
+    CheckProvisioning:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/checkProvisioning.checkProvisioning
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    S3_BUCKET: !Ref iotKeysAndCertsBucket
+                    THINGS_TABLE: !Ref ThingsTable
+                    POLICY_NAME: !Ref IotTankPolicy
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:PutItem
+                      Resource: !GetAtt ThingsTable.Arn
+    CheckThingAttachments:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/checkThingAttachments.checkThingAttachments
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+    CreateKeysAndCert:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/createKeysAndCert.createKeysAndCert
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    S3_BUCKET: !Ref iotKeysAndCertsBucket
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:CreateKeysAndCertificate
+                      Resource: '*'
+                    - Effect: Allow
+                      Action:
+                        - s3:PutObject
+                      Resource: !Sub arn:aws:s3:::${iotKeysAndCertsBucket}/* 
+    CreateThing:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/createThing.createThing
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:CreateThing
+                      Resource: '*'
+    DeleteCert:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/deleteCert.deleteCert
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    S3_BUCKET: !Ref iotKeysAndCertsBucket
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:DeleteCertificate
+                      Resource: '*'
+                    - Effect: Allow
+                      Action:
+                        - s3:DeleteObject
+                      Resource: !Sub arn:aws:s3:::${iotKeysAndCertsBucket}/* 
+    DeleteMetadata:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/deleteMetadata.deleteMetadata
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    THINGS_TABLE: !Ref ThingsTable
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:DeleteItem
+                      Resource: !GetAtt ThingsTable.Arn
+    DeleteThing:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/deleteThing.deleteThing
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:DeleteThing
+                      Resource: '*'
+    DetachCertFromThing:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/detachCertFromThing.detachCertFromThing
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:DetachThingPrincipal
+                      Resource: '*'
+    DetachPolicyFromCert:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/detachPolicyFromCert.detachPolicyFromCert
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    POLICY_NAME: !Ref IotTankPolicy
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:DetachPolicy
+                      Resource: '*'
+    DisableCert:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: provisioning/disableCert.disableCert
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    THINGS_TABLE: !Ref ThingsTable
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:GetItem
+                      Resource: !GetAtt ThingsTable.Arn
+                    - Effect: Allow
+                      Action:
+                        - iot:UpdateCertificate
+                      Resource: '*'
+    ProvisionRole:
+        Type: AWS::IAM::Role
+        Properties : 
+            AssumeRolePolicyDocument: 
+                Version: "2012-10-17"
+                Statement: 
+                    - 
+                      Effect: "Allow"
+                      Principal: 
+                        Service: 
+                          - "states.amazonaws.com"
+                      Action: 
+                        - "sts:AssumeRole"
+            Policies:
+                - 
+                    PolicyName: !Sub '${AWS::StackName}-lambda'
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            - 
+                                Effect: Allow
+                                Action:
+                                    - lambda:InvokeFunction
+                                Resource:
+                                    - !GetAtt AttachCertToThing.Arn
+                                    - !GetAtt AttachPolicyToCert.Arn
+                                    - !GetAtt CheckIfThingExists.Arn
+                                    - !GetAtt CheckProvisioning.Arn
+                                    - !GetAtt CheckThingAttachments.Arn
+                                    - !GetAtt CreateKeysAndCert.Arn
+                                    - !GetAtt CreateThing.Arn
+                                    - !GetAtt DeleteCert.Arn
+                                    - !GetAtt DeleteMetadata.Arn
+                                    - !GetAtt DeleteThing.Arn
+                                    - !GetAtt DetachCertFromThing.Arn
+                                    - !GetAtt DetachPolicyFromCert.Arn
+                                    - !GetAtt DisableCert.Arn
+
+    ProvisionThing:
+        Type: AWS::StepFunctions::StateMachine
+        Properties:
+            DefinitionString: !Sub |
+                {
+                    "Comment":"If a thing with the same name does not exists, create it and attach a new cert and policy to it.",
+                    "StartAt":"fetchThing",
+                    "States":{
+                        "fetchThing":{
+                            "Type":"Task",
+                            "Resource":"${CheckIfThingExists.Arn}",
+                            "Next":"doesThingExists"
+                        },
+                        "doesThingExists":{
+                            "Type":"Choice",
+                            "Choices":[
+                                {
+                                    "Variable":"$.exists",
+                                    "BooleanEquals":true,
+                                    "Next":"thingAlreadyExistsFail"
+                                },
+                                {
+                                    "Variable":"$.exists",
+                                    "BooleanEquals":false,
+                                    "Next":"provisionThing"
+                                }
+                            ]
+                        },
+                        "thingAlreadyExistsFail":{
+                            "Type":"Fail",
+                            "Error":"Thing already exists."
+                        },
+                        "provisionThing":{
+                            "Type":"Parallel",
+                            "Next":"checkProvisioning",
+                            "Branches":[
+                                {
+                                    "StartAt":"createThing",
+                                    "States":{
+                                        "createThing":{
+                                            "Type":"Task",
+                                            "Resource":"${CreateThing.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"createKeysAndCerts",
+                                    "States":{
+                                        "createKeysAndCerts":{
+                                            "Type":"Task",
+                                            "Resource":"${CreateKeysAndCert.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "checkProvisioning":{
+                            "Type":"Task",
+                            "Resource":"${CheckProvisioning.Arn}",
+                            "Next":"attachResourses"
+                        },
+                        "attachResourses":{
+                            "Type":"Parallel",
+                            "Next":"checkAttachments",
+                            "Branches":[
+                                {
+                                    "StartAt":"attachPolicyToCert",
+                                    "States":{
+                                        "attachPolicyToCert":{
+                                            "Type":"Task",
+                                            "Resource":"${AttachPolicyToCert.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"attachCertToThing",
+                                    "States":{
+                                        "attachCertToThing":{
+                                            "Type":"Task",
+                                            "Resource":"${AttachCertToThing.Arn}",  
+                                            "End":true
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "checkAttachments":{
+                            "Type":"Task",
+                            "Resource":"${CheckThingAttachments.Arn}",
+                            "End":true
+                        }
+                    }
+                }
+            RoleArn: !GetAtt ProvisionRole.Arn
+    RemoveThing:
+        Type: AWS::StepFunctions::StateMachine
+        Properties:
+            DefinitionString: !Sub |
+                {
+                    "Comment":"If the thing exists, delete it and any cert and policy attached to it.",
+                    "StartAt":"fetchThing",
+                    "States":{
+                        "fetchThing":{
+                            "Type":"Task",
+                            "Resource":"${CheckIfThingExists.Arn}",
+                            "Next":"doesThingExists"
+                        },
+                        "doesThingExists":{
+                            "Type":"Choice",
+                            "Choices":[
+                                {
+                                    "Variable":"$.exists",
+                                    "BooleanEquals":false,
+                                    "Next":"thingDoesNotExistsFail"
+                                },
+                                {
+                                    "Variable":"$.exists",
+                                    "BooleanEquals":true,
+                                    "Next":"disableCert"
+                                }
+                            ]
+                        },
+                        "thingDoesNotExistsFail":{
+                            "Type":"Fail",
+                            "Error":"Thing does not already exists."
+                        },
+                        "disableCert":{
+                            "Type":"Task",
+                            "Resource":"${DisableCert.Arn}",
+                            "Next":"detachEntities"
+                        },
+                        "detachEntities":{
+                            "Type":"Parallel",
+                            "Next":"checkDetachments",
+                            "Branches":[
+                                {
+                                    "StartAt":"detachPolicyFromCert",
+                                    "States":{
+                                        "detachPolicyFromCert":{
+                                            "Type":"Task",
+                                            "Resource":"${DetachPolicyFromCert.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"detachCertFromThing",
+                                    "States":{
+                                        "detachCertFromThing":{
+                                            "Type":"Task",
+                                            "Resource":"${DetachCertFromThing.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "checkDetachments":{
+                            "Type":"Pass",
+                            "Next":"deleteResources",
+                            "OutputPath":"$[0]"
+                        },
+                        "deleteResources":{
+                            "Type":"Parallel",
+                            "OutputPath":"$[1]",
+                            "Next":"deleteMetadata",
+                            "Branches":[
+                                {
+                                    "StartAt":"deleteCert",
+                                    "States":{
+                                        "deleteCert":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteCert.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteThing",
+                                    "States":{
+                                        "deleteThing":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteThing.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "deleteMetadata":{
+                            "Type":"Task",
+                            "Resource":"${DeleteMetadata.Arn}",
+                            "End":true
+                        }
+                    }
+                }
+            RoleArn: !GetAtt ProvisionRole.Arn
+
 Outputs:
     UserPoolId:
         Description: UserPoolId id
@@ -108,3 +644,11 @@ Outputs:
     userPoolWebClientId:
         Description: The user pool web client id
         Value: !Ref UserPoolClient
+    ThingsTable:
+        Description: Table used to hold iot things metadata
+        Value: !Ref ThingsTable
+    iotKeysAndCertsBucket:
+        Description: S3 bucket that will store iot keys and certs
+        Value: !Ref iotKeysAndCertsBucket
+    # User:
+    #     Value: !GetAtt User.Username
