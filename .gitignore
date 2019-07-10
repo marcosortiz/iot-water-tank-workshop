@@ -13,4 +13,7 @@ frontend/config/config.json
 # ----- Backend -----
 backend/config/config.json
 
+# ----- Edge -----
+edge/src/config/config.json
+
 ./config/config.json
