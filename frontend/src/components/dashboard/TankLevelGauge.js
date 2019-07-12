@@ -3,9 +3,8 @@ import { interpolateRgb } from 'd3-interpolate';
 import React, { Component } from 'react';
 import LiquidFillGauge from 'react-liquid-gauge';
 
+
 class TankLevelGauge extends Component {
-
-
 
     render() {
         const radius = 50;

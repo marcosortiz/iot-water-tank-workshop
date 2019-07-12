@@ -3,15 +3,18 @@ var path = require('path');
 
 var AWS            = require('aws-sdk/global');
 var Cloudformation = require('aws-sdk/clients/cloudformation');
+var Iot            = require('aws-sdk/clients/iot');
+
 
 const BACKEND_CONFIG_FILE_PATH = path.normalize(`${path.resolve(__dirname)}/../../config/config.json`);
 const FRONTEND_CONFIG_FILE_PATH = path.normalize(`${path.resolve(__dirname)}/../src/config/config.json`);
 const KEYS = [
     'IdentityPoolId',
     'UserPoolId',
-    'userPoolWebClientId'
+    'userPoolWebClientId',
+    'IotWebPolicy',
+    'ListTanks'
 ];
-const INSTANCE_TYPES = ['t3a.medium', 't3.medium', 't2.medium'];
 
 var region = null;
 var stackName = null;
@@ -59,9 +62,16 @@ function fetchConfig(keys, outputs) {
             KEYS.forEach(function(key) {
                 config[key] = find(outputs, key);
             });
-            var content = JSON.stringify(config, null, 4);
-            fs.writeFileSync(FRONTEND_CONFIG_FILE_PATH, content);
-            console.log(`Backend configuration saved to ${BACKEND_CONFIG_FILE_PATH}`);
+            var iot = new Iot();
+            iot.describeEndpoint({endpointType: 'iot:Data-ATS'}, function(err, data){
+                if (err) console.log(err, err.stack);
+                else {
+                    config['iotEndpointAddress'] = data.endpointAddress
+                    var content = JSON.stringify(config, null, 4);
+                    fs.writeFileSync(FRONTEND_CONFIG_FILE_PATH, content);
+                    console.log(`Backend configuration saved to ${BACKEND_CONFIG_FILE_PATH}`);
+                }
+            });
         }     
     });
 }

@@ -6,22 +6,22 @@ import TankList from './dashboard/TankList';
 
 class App extends React.Component {
 
-    state = { 
-        tanks: [
-            'Tank 1',
-            'Tank 2',
-            'Tank 3',
-            'Tank 4',
-            'Tank 5',
-            'Tank 6'
-        ],
-    };
+    constructor(props) {
+        super(props);
+        // console.log(this.props.authData.attributes.email);
+        // console.log(this.props.authData.signInUserSession.accessToken.payload['cognito:groups']);
+        this.state = { 
+            // email: this.props.authData.attributes.email,
+            // groups: this.props.authData.signInUserSession.accessToken.payload['cognito:groups']
+        };            
+    }
+
 
     render() {
         return (
             <div className="ui segment basic">
                 <div className="ui container">
-                    <TankList tanks={this.state.tanks} />
+                    <TankList groups={this.state.groups}/>
                 </div>
             </div>
         );

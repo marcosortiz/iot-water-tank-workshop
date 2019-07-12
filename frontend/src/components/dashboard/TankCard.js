@@ -1,6 +1,7 @@
-import React from 'react'
-import { Card, Icon, List, Popup } from 'semantic-ui-react'
+import React from 'react';
+import { Card, Header, Icon, Label, List, Popup, Segment } from 'semantic-ui-react';
 import TankLevelGauge from './TankLevelGauge';
+import { Hub } from 'aws-amplify';
 
 class TankCard extends React.Component {
 
@@ -12,25 +13,38 @@ class TankCard extends React.Component {
         },
         tankLevel: 50,
         color: '#0000FF',
+        telemetry: []
     };
 
-
-    refresh =() => {
-        var value = parseInt((Math.random() * 100).toFixed(2))
+    updateTelemetry(data, maxSize=900) {
+        var telemetry = this.state.telemetry;
+        var arr = telemetry.concat(data);
+        while(arr.length > maxSize) {
+            arr.shift();
+        }
+        var latestTankLevel =  parseInt(arr[arr.length - 1].tankLevel);
         this.setState({
-            tankLevel: value,
-            color: this.getColor(value),
+            telemetry: arr, 
+            tankLevel: latestTankLevel,
+            color: this.getColor(latestTankLevel)
         });
     }
 
-    componentDidMount() {
-        this.interval = setInterval(() => this.refresh(), 5000);
-    }
-    
-    componentWillUnmount() {
-        clearInterval(this.interval);
+    onTelemetrtData(data) {
+        var telemetry = data.payload.data;
+        this.updateTelemetry(telemetry);
     }
 
+    componentWillMount() {
+        Hub.listen(this.props.tankName, (data) => {
+            this.onTelemetrtData(data);           
+        })
+        Hub.remove(this.props.tankName);
+    }
+
+    componentWillUnmount() {
+        Hub.remove(this.props.tankName);
+    }
 
     getColor(value) {
         var min = this.state.shadow.minThreshold
@@ -39,16 +53,51 @@ class TankCard extends React.Component {
         return (value > max || value < min) ? '#FF0000' : '#0000FF';
     }
 
+    getWidget() {
+        if(this.state.telemetry.length > 0) {
+            return (
+                <TankLevelGauge 
+                    tankName={this.props.tankName}
+                    value={this.state.tankLevel}
+                    min={this.state.shadow.minThreshold}
+                    max={this.state.shadow.maxThreshold} 
+                    color={this.state.color} 
+                />
+            )    
+        } else {
+            return (
+                <Segment placeholder>
+                    <Header icon>
+                        <Icon loading name='spinner' />
+                    </Header>
+                    <Segment.Inline>
+                        <Label> No data available yet. </Label>
+                    </Segment.Inline>
+                </Segment>
+            )
+        }
+    }
+
     renderContent() {
         return (
             <div>
                 <Card key={this.props.tankName}>
                     <Card.Content>
-                        <Card.Header textAlign="center">{this.props.tankName}</Card.Header>
-                        <Card.Meta textAlign="center" ></Card.Meta>
+                        <Card.Header textAlign="center">
+                            {this.props.tankName}
+                        </Card.Header>
+                        <Card.Meta textAlign="center" >
+                            <Popup
+                                trigger={<Icon circular name='rss' />}
+                                content={`MQTT telemetry topic for ${this.props.tankName}.`}
+                                size='mini'
+                            /> tanks/{this.props.tankName}/telemetry 
+
+
+                        </Card.Meta>
                     </Card.Content>
-                    <Card.Content>
-                        <TankLevelGauge value={this.state.tankLevel} min={this.state.shadow.minThreshold} max={this.state.shadow.maxThreshold} color={this.state.color} />
+                    <Card.Content textAlign='center'>
+                        {this.getWidget()}
                     </Card.Content>
                     <Card.Content textAlign="center" extra>
                         <Card.Header textAlign="center">Shadow Values</Card.Header>

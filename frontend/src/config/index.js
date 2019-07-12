@@ -6,5 +6,10 @@ export default {
         IdentityPoolId: Config.IdentityPoolId,
         UserPoolId: Config.UserPoolId,
         userPoolWebClientId: Config.userPoolWebClientId
+    },
+    iotEndpointAddress: Config.iotEndpointAddress,
+    IotPolicyName: Config.IotWebPolicy,
+    lambda: {
+        ListTanks: Config.ListTanks
     }
 };

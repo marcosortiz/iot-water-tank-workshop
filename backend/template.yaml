@@ -115,6 +115,9 @@ Resources:
                                 cognito-identity.amazonaws.com:aud: !Ref IdentityPool
                             ForAnyValue:StringLike:
                                 cognito-identity.amazonaws.com:amr: authenticated
+            ManagedPolicyArns:
+                - arn:aws:iam::aws:policy/AWSIoTDataAccess
+                - arn:aws:iam::aws:policy/AWSIoTConfigAccess
             Path: "/"
             Policies:
                 - 
@@ -129,6 +132,16 @@ Resources:
                                     - cognito-sync:*
                                     - cognito-identity:*
                                 Resource: '*'
+                - 
+                    PolicyName: !Sub '${AWS::StackName}-lambda'
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            - Effect: Allow
+                              Action:
+                                - lambda:InvokeFunction
+                              Resource: 
+                                - !GetAtt ListTanks.Arn
     IdentityPoolRoleAttachment:
         Type: AWS::Cognito::IdentityPoolRoleAttachment
         Properties:
@@ -172,7 +185,63 @@ Resources:
                         ]
                     }]
                 }
-            PolicyName: TankPolicy
+    IotWebPolicy:
+        Type: AWS::IoT::Policy
+        Properties:
+            PolicyDocument: |
+                {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": [
+                                "iot:*"
+                            ],
+                            "Resource": [
+                                "*"
+                            ],
+                            "Effect": "Allow"
+                        }
+                    ]
+                }
+            # PolicyDocument: !Sub |
+            #     {
+            #         "Version": "2012-10-17",
+            #         "Statement": [{
+            #             "Effect": "Allow",
+            #             "Action":["iot:Connect"],
+            #             "Resource": ["*"]
+            #         },{
+            #             "Effect": "Allow",
+            #             "Action":[
+            #                 "iot:Publish"
+            #             ],
+            #             "Resource": [
+            #                 "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/+/telemetry",
+            #                 "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/+/cmds/ack"
+            #             ]
+            #         },{
+            #             "Effect": "Allow",
+            #             "Action":[
+            #                 "iot:Subscribe"
+            #             ],
+            #             "Resource": [
+            #                 "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/tanks/+/cmds"
+            #             ]
+            #         },{
+            #             "Effect": "Allow",
+            #             "Action":[
+            #                 "iot:Receive"
+            #             ],
+            #             "Resource": [
+            #                 "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/+/cmds"
+            #             ]
+            #         }]
+            #     }
+    CognitoPrincipalAttachment:
+        Type: AWS::IoT::PolicyPrincipalAttachment
+        Properties: 
+            PolicyName: !Ref IotWebPolicy
+            Principal: !Ref IdentityPool
     ThingsTable:
         Type: AWS::Serverless::SimpleTable
         Properties:
@@ -188,7 +257,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/attachCertToThing.attachCertToThing
+            Handler: tanks/provisioning/attachCertToThing.attachCertToThing
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -202,7 +271,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/attachPolicyToCert.attachPolicyToCert
+            Handler: tanks/provisioning/attachPolicyToCert.attachPolicyToCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -219,7 +288,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/checkIfThingExists.checkIfThingExists
+            Handler: tanks/provisioning/checkIfThingExists.checkIfThingExists
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -233,7 +302,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/checkProvisioning.checkProvisioning
+            Handler: tanks/provisioning/checkProvisioning.checkProvisioning
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -252,7 +321,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/checkThingAttachments.checkThingAttachments
+            Handler: tanks/provisioning/checkThingAttachments.checkThingAttachments
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -260,7 +329,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/createKeysAndCert.createKeysAndCert
+            Handler: tanks/provisioning/createKeysAndCert.createKeysAndCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -281,7 +350,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/createThing.createThing
+            Handler: tanks/provisioning/createThing.createThing
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -295,7 +364,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/deleteCert.deleteCert
+            Handler: tanks/provisioning/deleteCert.deleteCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -316,7 +385,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/deleteMetadata.deleteMetadata
+            Handler: tanks/provisioning/deleteMetadata.deleteMetadata
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -333,7 +402,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/deleteThing.deleteThing
+            Handler: tanks/provisioning/deleteThing.deleteThing
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -347,7 +416,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/detachCertFromThing.detachCertFromThing
+            Handler: tanks/provisioning/detachCertFromThing.detachCertFromThing
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -361,7 +430,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/detachPolicyFromCert.detachPolicyFromCert
+            Handler: tanks/provisioning/detachPolicyFromCert.detachPolicyFromCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -378,7 +447,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: provisioning/disableCert.disableCert
+            Handler: tanks/provisioning/disableCert.disableCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -395,6 +464,23 @@ Resources:
                       Action:
                         - iot:UpdateCertificate
                       Resource: '*'
+    ListTanks:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/listTanks.listTanks
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    THINGS_TABLE: !Ref ThingsTable
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:Scan
+                      Resource: !GetAtt ThingsTable.Arn
     ProvisionRole:
         Type: AWS::IAM::Role
         Properties : 
@@ -650,5 +736,9 @@ Outputs:
     iotKeysAndCertsBucket:
         Description: S3 bucket that will store iot keys and certs
         Value: !Ref iotKeysAndCertsBucket
-    # User:
-    #     Value: !GetAtt User.Username
+    IotWebPolicy:
+        Description: The AWS IoT policy that will be used by the frontend
+        Value: !Ref IotWebPolicy
+    ListTanks:
+        Description: Lambda function used to list tanks
+        Value: !Ref ListTanks
