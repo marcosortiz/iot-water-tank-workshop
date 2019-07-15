@@ -13,7 +13,9 @@ class TankCard extends React.Component {
         },
         tankLevel: 50,
         color: '#0000FF',
-        telemetry: []
+        telemetry: [],
+        minColor: 'blue',
+        maxColor: 'blue',
     };
 
     updateTelemetry(data, maxSize=900) {
@@ -26,7 +28,9 @@ class TankCard extends React.Component {
         this.setState({
             telemetry: arr, 
             tankLevel: latestTankLevel,
-            color: this.getColor(latestTankLevel)
+            color: this.getColor(latestTankLevel),
+            minColor: this.getMinThresholdColor(latestTankLevel),
+            maxColor: this.getMaxThresholdColor(latestTankLevel)
         });
     }
 
@@ -51,6 +55,19 @@ class TankCard extends React.Component {
         var max = this.state.shadow.maxThreshold;
 
         return (value > max || value < min) ? '#FF0000' : '#0000FF';
+    }
+
+    getMinThresholdColor(value) {
+        var min = this.state.shadow.minThreshold;
+
+        return (value < min) ? 'red' : 'blue';
+    }
+
+    getMaxThresholdColor(value) {
+
+        var max = this.state.shadow.maxThreshold;
+
+        return (value > max) ? 'red' : 'blue';
     }
 
     getWidget() {
@@ -88,7 +105,7 @@ class TankCard extends React.Component {
                         </Card.Header>
                         <Card.Meta textAlign="center" >
                             <Popup
-                                trigger={<Icon circular name='rss' />}
+                                trigger={<Icon circular name='rss' inverted color='grey' />}
                                 content={`MQTT telemetry topic for ${this.props.tankName}.`}
                                 size='mini'
                             /> tanks/{this.props.tankName}/telemetry 
@@ -105,7 +122,7 @@ class TankCard extends React.Component {
                             <List.Item>
                                 <List.Content>
                                     <Popup
-                                        trigger={<Icon circular name='wifi' />}
+                                        trigger={<Icon circular name='wifi' inverted color='blue' />}
                                         content='Telemetry per minute pushing rate.'
                                         size='mini'
                                     /> {this.state.shadow.telemetryRate} tpm
@@ -114,7 +131,7 @@ class TankCard extends React.Component {
                             <List.Item>
                                 <List.Content>
                                     <Popup
-                                        trigger={<Icon circular name='thermometer full' />}
+                                        trigger={<Icon circular name='thermometer full' inverted color={this.state.maxColor} />}
                                         content='Max tank level threshold (%).'
                                         size='mini'
                                     /> {this.state.shadow.maxThreshold}%
@@ -124,7 +141,7 @@ class TankCard extends React.Component {
                                 <List.Content>
 
                                     <Popup
-                                        trigger={<Icon circular name='thermometer empty' />}
+                                        trigger={<Icon circular name='thermometer empty' inverted color={this.state.minColor}  />}
                                         content='Min tank level threshold (%).'
                                         size='mini'
                                     /> {this.state.shadow.minThreshold}%
