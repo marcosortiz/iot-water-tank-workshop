@@ -742,3 +742,9 @@ Outputs:
     ListTanks:
         Description: Lambda function used to list tanks
         Value: !Ref ListTanks
+    ProvisionThing:
+        Description: State machine arn for provisioning tanks.
+        Value: !Ref ProvisionThing
+    RemoveThing:
+        Description: State machine arn for removing tanks.
+        Value: !Ref RemoveThing
