@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card } from 'semantic-ui-react';
+import { Card, Header, Image, Segment } from 'semantic-ui-react';
 import Amplify, { Auth, Hub, PubSub } from 'aws-amplify';
 import { AWSIoTProvider } from '@aws-amplify/pubsub/lib/Providers';
 import IoT from 'aws-sdk/clients/iot';
@@ -100,23 +100,37 @@ class TankList extends React.Component {
     }
 
     renderContent() {
+        if(this.state.tanks.length <= 0) {
+            return (
+                <div>
 
-        return (
-            <div>
-                <Card.Group>
-                {this.state.tanks.map((tank, index) => {
-                    var tankName = tank.thingName.S;
-                    return (
-                        <TankCard 
-                            key={tankName}
-                            tankName={tankName} 
-                            telemetry={this.state.telemetry.tankName || []}
-                        />
-                    )
-                })}
-                </Card.Group>
-            </div>
-        );     
+                    <Segment placeholder>
+                        <Header as='h1' textAlign='center'>
+                            {/* <Icon name='microchip' /> */}
+                            <Image circular src='/images/water_tank.jpg' size='massive'  verticalAlign='middle' />
+                            No tanks provisioned yet.
+                        </Header>
+                    </Segment>
+                </div>
+            )
+        } else {
+            return (
+                <div>
+                    <Card.Group>
+                    {this.state.tanks.map((tank, index) => {
+                        var tankName = tank.thingName.S;
+                        return (
+                            <TankCard 
+                                key={tankName}
+                                tankName={tankName} 
+                                telemetry={this.state.telemetry.tankName || []}
+                            />
+                        )
+                    })}
+                    </Card.Group>
+                </div>
+            );    
+        } 
     }
 
     render() {
