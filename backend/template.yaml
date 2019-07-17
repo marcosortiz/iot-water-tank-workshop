@@ -154,6 +154,48 @@ Resources:
             PolicyDocument: !Sub |
                 {
                     "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action":["iot:Connect"],
+                            "Resource": ["*"]
+                        },{
+                            "Effect": "Allow",
+                            "Action":[
+                                "iot:Publish"
+                            ],
+                            "Resource": [
+                                "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/telemetry",
+                                "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/cmds/ack",
+                                "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${!iot:ClientId}/shadow/update"
+                            ]
+                        },{
+                            "Effect": "Allow",
+                            "Action":[
+                                "iot:Subscribe"
+                            ],
+                            "Resource": [
+                                "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/tanks/${!iot:ClientId}/cmds",
+                                "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${!iot:ClientId}/*"
+                            ]
+                        },{
+                            "Effect": "Allow",
+                            "Action":[
+                                "iot:Receive"
+                            ],
+                            "Resource": [
+                                "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/cmds",
+                                "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${!iot:ClientId}/*"
+                            ]
+                        }
+                    ]
+                }
+    IotWebPolicy:
+        Type: AWS::IoT::Policy
+        Properties:
+            PolicyDocument: !Sub |
+                {
+                    "Version": "2012-10-17",
                     "Statement": [{
                         "Effect": "Allow",
                         "Action":["iot:Connect"],
@@ -164,8 +206,8 @@ Resources:
                             "iot:Publish"
                         ],
                         "Resource": [
-                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/telemetry",
-                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/cmds/ack"
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/*",
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/*/shadow/get"
                         ]
                     },{
                         "Effect": "Allow",
@@ -173,7 +215,9 @@ Resources:
                             "iot:Subscribe"
                         ],
                         "Resource": [
-                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/tanks/${!iot:ClientId}/cmds"
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/tanks/*",
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/*/shadow/update/accepted",
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/*/shadow/get/accepted"
                         ]
                     },{
                         "Effect": "Allow",
@@ -181,62 +225,12 @@ Resources:
                             "iot:Receive"
                         ],
                         "Resource": [
-                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/cmds"
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/*",
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/*/shadow/update/accepted",
+                            "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/*/shadow/get/accepted"
                         ]
                     }]
                 }
-    IotWebPolicy:
-        Type: AWS::IoT::Policy
-        Properties:
-            PolicyDocument: |
-                {
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Action": [
-                                "iot:*"
-                            ],
-                            "Resource": [
-                                "*"
-                            ],
-                            "Effect": "Allow"
-                        }
-                    ]
-                }
-            # PolicyDocument: !Sub |
-            #     {
-            #         "Version": "2012-10-17",
-            #         "Statement": [{
-            #             "Effect": "Allow",
-            #             "Action":["iot:Connect"],
-            #             "Resource": ["*"]
-            #         },{
-            #             "Effect": "Allow",
-            #             "Action":[
-            #                 "iot:Publish"
-            #             ],
-            #             "Resource": [
-            #                 "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/+/telemetry",
-            #                 "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/+/cmds/ack"
-            #             ]
-            #         },{
-            #             "Effect": "Allow",
-            #             "Action":[
-            #                 "iot:Subscribe"
-            #             ],
-            #             "Resource": [
-            #                 "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/tanks/+/cmds"
-            #             ]
-            #         },{
-            #             "Effect": "Allow",
-            #             "Action":[
-            #                 "iot:Receive"
-            #             ],
-            #             "Resource": [
-            #                 "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/+/cmds"
-            #             ]
-            #         }]
-            #     }
     CognitoPrincipalAttachment:
         Type: AWS::IoT::PolicyPrincipalAttachment
         Properties: 

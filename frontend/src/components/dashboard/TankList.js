@@ -8,7 +8,17 @@ import Config from '../../config';
 import Lambda from '../../aws/Lambda';
 import uuidv4 from 'uuid/v4';
 
-var mqttSubscription = null;
+
+const TELEMETRY_EVENT = 'telemetry';
+const SHADOW_EVENT    = 'shadowUpdate';
+
+const TELEMETRY_TOPIC              = 'tanks/+/telemetry';
+const SHADOW_UPDATE_ACCEPTED_TOPIC = '$aws/things/+/shadow/update/accepted';
+const SHADOW_GET_ACCEPTED_TOPIC    = '$aws/things/+/shadow/get/accepted';
+
+// var mqttTelemetrySubscription = null;
+// var mqttShadowUpdateAcceptedSubscription = null;
+var subscriptions = []
 
 Amplify.addPluggable(
     new AWSIoTProvider({
@@ -21,7 +31,6 @@ class TankList extends React.Component {
 
     constructor(props) {
         super(props);
-        // // if (this.props.groups.includes('TestAdminRole')) {
         this.state = { 
             tanks: [],
             loading: false,
@@ -37,6 +46,11 @@ class TankList extends React.Component {
                 console.log(err);
                 _this.setState( {error: err, loading: false} );
             } else {
+                data.forEach(function(obj) {
+                    var topicName = `$aws/things/${obj.thingName.S}/shadow/get`;
+                    PubSub.publish(topicName, {});
+                });
+                
                 _this.setState({
                     loading: false,
                     tanks: data
@@ -70,21 +84,42 @@ class TankList extends React.Component {
 
         Hub.dispatch( tankName, 
             { 
-                event: 'telemetry', 
+                event: TELEMETRY_EVENT, 
                 data: telemetry, 
                 message:'' 
         });
     }
 
+    handleShadowUpdateAccepted(data) {
+        var reportedValue = data.value.state.reported;
+        var topicKey = Object.getOwnPropertySymbols(data.value)[0];
+        var topicName = data.value[topicKey];
+        var tankName = topicName.split('/')[2];
+        Hub.dispatch( tankName, 
+            { 
+                event: SHADOW_EVENT, 
+                data: reportedValue, 
+                message:'' 
+        });
+    }
+
     subscribe() {
-        var topic = 'tanks/+/telemetry';
         const cliendId = uuidv4();
         var opts = {clientId: cliendId};
-        mqttSubscription = PubSub.subscribe([topic], opts).subscribe({
+        var mqttTelemetrySubscription = PubSub.subscribe([TELEMETRY_TOPIC], opts).subscribe({
             next: data => this.handleTelemetry(data),
             error: err => console.error(err),
             close: () => console.log('Done'),
         });
+        subscriptions.push(mqttTelemetrySubscription);
+
+        var topics = [SHADOW_UPDATE_ACCEPTED_TOPIC, SHADOW_GET_ACCEPTED_TOPIC];
+        var mqttShadowUpdateAcceptedSubscription = PubSub.subscribe(topics, opts).subscribe({
+            next: data => this.handleShadowUpdateAccepted(data),
+            error: err => console.error(err),
+            close: () => console.log('Done'),
+        }); 
+        subscriptions.push(mqttShadowUpdateAcceptedSubscription);
     }
 
     componentWillMount() {
@@ -94,9 +129,11 @@ class TankList extends React.Component {
     }
 
     componentWillUnmount() {
-        if (mqttSubscription !== null) {
-            mqttSubscription.unsubscribe();
-        }
+        subscriptions.forEach(function(sub) {
+            if (sub !== null) {
+                sub.unsubscribe();
+            }
+        });
     }
 
     renderContent() {
@@ -106,7 +143,6 @@ class TankList extends React.Component {
 
                     <Segment placeholder>
                         <Header as='h1' textAlign='center'>
-                            {/* <Icon name='microchip' /> */}
                             <Image circular src='/images/water_tank.jpg' size='massive'  verticalAlign='middle' />
                             No tanks provisioned yet.
                         </Header>

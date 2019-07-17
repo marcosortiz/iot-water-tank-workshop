@@ -105,7 +105,11 @@ module.exports = {
             props.status = Constants.STANDBY_STATUS;
             props.standByRequested = false;
         }
-        else if (status === Constants.DRAINING_STATUS && tankLevel <= DEFAULT_FILLING_THRESHOLD && props.autoCirculateEnabled === true) {
+        // else if (status === Constants.DRAINING_STATUS && tankLevel <= DEFAULT_FILLING_THRESHOLD && props.autoCirculateEnabled === true) {
+        //     props.status = Constants.FILLING_STATUS;
+        //     logger.info(`bot-status-change from ${status} to ${Constants.FILLING_STATUS}`);
+        //     return;
+        else if(status === Constants.DRAINING_STATUS && tankLevel <= MIN_TANK_LEVEL) {
             props.status = Constants.FILLING_STATUS;
             logger.info(`bot-status-change from ${status} to ${Constants.FILLING_STATUS}`);
             return;

@@ -7,9 +7,9 @@ class TankCard extends React.Component {
 
     state = { 
         shadow: {
-            telemetryRate: 6,
-            minThreshold: 5,
-            maxThreshold: 85,
+            telemetryRate: '?',
+            minThreshold: '?',
+            maxThreshold: '?',
         },
         tankLevel: 50,
         color: '#0000FF',
@@ -39,9 +39,24 @@ class TankCard extends React.Component {
         this.updateTelemetry(telemetry);
     }
 
+    onShadowUpdate(data) {
+        var shadow = {
+            telemetryRate: data.payload.data.telemetryPerMinRate,
+            minThreshold: data.payload.data.minTankLevelThreshold,
+            maxThreshold: data.payload.data.maxTankLevelTjreshold,
+        }
+        this.setState({
+            shadow: shadow,
+        });
+    }
+
     componentWillMount() {
         Hub.listen(this.props.tankName, (data) => {
-            this.onTelemetrtData(data);           
+            if (data.payload.event === 'telemetry') {
+                this.onTelemetrtData(data);           
+            } else if(data.payload.event === 'shadowUpdate') {
+                this.onShadowUpdate(data);   
+            }
         })
         Hub.remove(this.props.tankName);
     }

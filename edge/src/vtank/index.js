@@ -27,11 +27,16 @@ function initProps(obj, opts) {
         startDrainRequested: false,
         standByRequested: false,
         autoCirculateEnabled: true
+    };
+    obj.props.shadow = {
+        telemetryPerMinRate: 4,
+        minTankLevelThreshold: 15,
+        maxTankLevelTjreshold: 85
     }
     obj.props.logger = TankLogger.getLogger(obj.props.thingName);
 }
 
-module.exports = class Bot {
+module.exports = class Tank {
 
     constructor(opts={}) {
         initProps(this, opts);

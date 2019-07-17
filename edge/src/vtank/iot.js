@@ -11,7 +11,7 @@ const VERISIGN_ROOT_CA_FILENAME = 'verisign-root-ca.pem'
 const CA_CERT = fs.readFileSync(
     `${path.resolve(__dirname)}/${VERISIGN_ROOT_CA_FILENAME}`,'utf8');
 
-var aws_iot_device = null;
+var thingShadow = null;
 var bot = null;
 
 module.exports =  {
@@ -24,38 +24,63 @@ module.exports =  {
             clientId: bot.props.thingName,
             host: Constants.IOT_HOST,
         }
-        aws_iot_device = iot.device(opts);
+        thingShadow = iot.thingShadow(opts);
 
-        aws_iot_device.on('connect', function() {
+        thingShadow.on('connect', function() {
+            bot.props.logger.info('aws-iot-event connect');
+            bot.props.logger.info(`Registering for shadow events for to ${bot.props.thingName}`);
+            thingShadow.register(bot.props.thingName, {}, function(){
+                thingShadow.subscribe(bot.props.cmdsTopic);
+                var state = {
+                    state: {
+                        reported: caller.props.shadow
+                    }
+                }
+
+                thingShadow.update(bot.props.thingName, state );
+            });
+            
             bot.props.logger.info(`Subscribing to ${bot.props.cmdsTopic}`);
-            aws_iot_device.subscribe(bot.props.cmdsTopic);
-            aws_iot_device.on('message', function(t, payload) {
+            thingShadow.subscribe(bot.props.cmdsTopic);
+            thingShadow.on('message', function(t, payload) {
                 const resp = MessageHandler.handle(payload.toString(), bot);
-                aws_iot_device.publish(bot.props.cmdAckTopic, resp);
+                thingShadow.publish(bot.props.cmdAckTopic, resp);
             });
         });
 
-        aws_iot_device.on('connect', function() {
-            bot.props.logger.info('aws-iot-event connect');
-        });
-        aws_iot_device.on('reconnect', function() {
+        thingShadow.on('reconnect', function() {
             bot.props.logger.info('aws-iot-event reconnect');
         });
-        aws_iot_device.on('close', function() {
+        thingShadow.on('close', function() {
             bot.props.logger.info('aws-iot-event close');
         });
-        aws_iot_device.on('offline', function() {
+        thingShadow.on('offline', function() {
             bot.props.logger.info('aws-iot-event offline')
         });
-        aws_iot_device.on('error', function() {
+        thingShadow.on('error', function() {
             bot.props.logger.info('aws-iot-event error');
         });
-        aws_iot_device.on('end', function() {
+        thingShadow.on('end', function() {
             bot.props.logger.info('aws-iot-event end');
+        });
+        
+        thingShadow.on('status', function(thingName, stat, clientToken, stateObject) {
+            bot.props.logger.info(`Shadow update ${stat} for ${thingName}`);
+        });
+        thingShadow.on('delta', function(thingName, stateObject) {
+            console.log('received delta on '+thingName+': '+
+                        JSON.stringify(stateObject));
+        });
+
+        thingShadow.on('timeout', function(thingName, clientToken) {
+            bot.props.logger.info(`received timeout on ${thingName} with token ${clientToken}`);
         });
 
     },
     sendTelemetry: function (topic, data) {
-        aws_iot_device.publish(topic, data);
+        thingShadow.publish(topic, data);
+    },
+    updateShadow: function(thingName, stateObject) {
+        thingShadow.update(thingName, stateObject);
     }
 }
