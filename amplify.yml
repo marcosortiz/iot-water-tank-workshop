@@ -9,7 +9,7 @@ backend:
         - DEFAULT_STACK_NAME="iot-water-tank-workshop-${ACCOUNT_ID}"
         - export STACK_NAME="${STACK_NAME:-$DEFAULT_STACK_NAME}"
         - echo $STACK_NAME
-        - export SAM_BUCKET="${STACK_NAME}-${REGION}-sam"
+        - export SAM_BUCKET="${STACK_NAME}-${REGION}-${ACCOUNT_ID}-sam"
         - echo $REGION
         - echo $SAM_BUCKET
         - echo $STACK_NAME
