@@ -515,6 +515,7 @@ Resources:
                                     # Greengrass Lambda Functions
                                     - !GetAtt CheckServiceRole.Arn
                                     - !GetAtt CreateServiceRole.Arn
+                                    - !GetAtt CreateGreengrassGroup.Arn
     # Greengrass Lambda Functions
     CheckServiceRole:
         Type: AWS::Serverless::Function
@@ -547,7 +548,21 @@ Resources:
                         - iam:CreateRole
                         - iam:PassRole
                         - greengrass:associateServiceRoleToAccount
-                      Resource: '*'                               
+                      Resource: '*'          
+    CreateGreengrassGroup:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/createGreengrassGroup.createGreengrassGroup
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createGroup
+                      Resource: '*'                      
     # Step Functions
     ProvisionThing:
         Type: AWS::StepFunctions::StateMachine
@@ -677,7 +692,7 @@ Resources:
                                 {
                                     "Variable": "$.checkServiceRole.exists",
                                     "BooleanEquals": true,
-                                    "Next": "finished"
+                                    "Next": "createGreengrassGroup"
                                 }
                             ]
                         },
@@ -685,6 +700,12 @@ Resources:
                             "Type": "Task",
                             "Resource": "${CreateServiceRole.Arn}",
                             "ResultPath": "$.createServiceRole",
+                            "Next": "createGreengrassGroup"
+                        },
+                        "createGreengrassGroup": {
+                            "Type": "Task",
+                            "Resource": "${CreateGreengrassGroup.Arn}",
+                            "ResultPath": "$.createGroup",
                             "Next": "finished"
                         },
                         "finished": {

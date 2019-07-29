@@ -9,7 +9,7 @@ var greengrass = new Greengrass();
 module.exports = {
     createGreengrassGroup: function (event, context, cb) {
         var params = {
-            Name: 'STRING_VALUE',
+            Name: `${event.thingName}-Group`,
         };
         greengrass.createGroup(params, function (err, data) {
             if (err) {
