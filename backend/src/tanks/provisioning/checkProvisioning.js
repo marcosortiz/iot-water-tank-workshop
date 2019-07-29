@@ -12,7 +12,8 @@ module.exports =  {
             thingName: event.provisionThing[0].thingName,
             certificateId: event.provisionThing[1].certificateId,
             certificateArn: event.provisionThing[1].certificateArn,
-            policyName: process.env.POLICY_NAME
+            policyName: process.env.POLICY_NAME,
+            includeGreengrass: event.includeGreengrass
         };
 
         // Write to dynamoDB table
@@ -22,7 +23,8 @@ module.exports =  {
                 'thingName': {S: data.thingName},
                 'certificateId': {S: data.certificateId},
                 'certificateArn': {S: data.certificateArn},
-                'policyName': {S: data.policyName}
+                'policyName': {S: data.policyName},
+                'greengrass': {BOOL: data.includeGreengrass}
             }
         };
         ddb.putItem(ddbParams, function(err, resp1) {

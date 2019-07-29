@@ -512,7 +512,43 @@ Resources:
                                     - !GetAtt DetachCertFromThing.Arn
                                     - !GetAtt DetachPolicyFromCert.Arn
                                     - !GetAtt DisableCert.Arn
-
+                                    # Greengrass Lambda Functions
+                                    - !GetAtt CheckServiceRole.Arn
+                                    - !GetAtt CreateServiceRole.Arn
+    # Greengrass Lambda Functions
+    CheckServiceRole:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/checkGreengrassServiceRole.checkGreengrassServiceRole
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:GetServiceRoleForAccount
+                      Resource: '*'
+    CreateServiceRole:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/addGreengrassServiceRole.addGreengrassServiceRole
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - AWSGreengrassResourceAccessRolePolicy # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iam:AttachRolePolicy
+                        - iam:CreateRole
+                        - iam:PassRole
+                        - greengrass:associateServiceRoleToAccount
+                      Resource: '*'                               
+    # Step Functions
     ProvisionThing:
         Type: AWS::StepFunctions::StateMachine
         Properties:
@@ -607,6 +643,48 @@ Resources:
                         "checkAttachments": {
                             "Type": "Task",
                             "Resource": "${CheckThingAttachments.Arn}",
+                            "Next": "includeGreengrass"
+                        },
+                        "includeGreengrass": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.includeGreengrass",
+                                    "BooleanEquals": true,
+                                    "Next": "checkServiceRole"
+                                },
+                                {
+                                    "Variable": "$.includeGreengrass",
+                                    "BooleanEquals": false,
+                                    "Next": "finished"
+                                }
+                            ]
+                        },
+                        "checkServiceRole": {
+                            "Type": "Task",
+                            "Resource": "${CheckServiceRole.Arn}",
+                            "Next": "serviceRoleMissing",
+                            "ResultPath": "$.checkServiceRole"
+                        },
+                        "serviceRoleMissing": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.checkServiceRole.exists",
+                                    "BooleanEquals": false,
+                                    "Next": "createServiceRole"
+                                },
+                                {
+                                    "Variable": "$.checkServiceRole.exists",
+                                    "BooleanEquals": true,
+                                    "Next": "finished"
+                                }
+                            ]
+                        },
+                        "createServiceRole": {
+                            "Type": "Task",
+                            "Resource": "${CreateServiceRole.Arn}",
+                            "ResultPath": "$.createServiceRole",
                             "Next": "finished"
                         },
                         "finished": {

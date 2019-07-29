@@ -11,10 +11,10 @@ var iam = new IAM();
 var responseData = {
     serviceRoleArn: null
 };
-var ROLE_NAME = 'Greengrass-Service-Role';
-var POLICY_ARN = 'arn:aws:iam::aws:policy/service-role/AWSGreengrassResourceAccessRolePolicy';
-var ASSUME_ROLE_POLICY_DOC = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"greengrass.amazonaws.com"},"Action":"sts:AssumeRole"}]}';
-var ROLE_DESCRIPTION = 'Greengrass Service Role';
+const ROLE_NAME = 'Greengrass-Service-Role';
+const POLICY_ARN = 'arn:aws:iam::aws:policy/service-role/AWSGreengrassResourceAccessRolePolicy';
+const ASSUME_ROLE_POLICY_DOC = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"greengrass.amazonaws.com"},"Action":"sts:AssumeRole"}]}';
+const ROLE_DESCRIPTION = 'Greengrass Service Role';
 
 module.exports = {
     addGreengrassServiceRole: function (event, context, cb) {

@@ -12,13 +12,13 @@ module.exports =  {
         iot.describeThing(params, function (err, data) {
             if (err) {
                 if( err.code == 'ResourceNotFoundException') {
-                    data = {thingName: event.thingName, exists: false}
+                    data = {thingName: event.thingName, exists: false, includeGreengrass: event.includeGreengrass}
                     cb(null, data)
                 } else {
                     cb(err, null);
                 }
             } else if (err === null && data.thingName === event.thingName) {
-                data = {thingName: event.thingName, exists: true}
+                data = {thingName: event.thingName, exists: true, includeGreengrass: event.includeGreengrass}
                 cb(null, data)
             }
         });
