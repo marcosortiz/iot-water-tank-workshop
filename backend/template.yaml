@@ -518,94 +518,99 @@ Resources:
         Properties:
             DefinitionString: !Sub |
                 {
-                    "Comment":"If a thing with the same name does not exists, create it and attach a new cert and policy to it.",
-                    "StartAt":"fetchThing",
-                    "States":{
-                        "fetchThing":{
-                            "Type":"Task",
-                            "Resource":"${CheckIfThingExists.Arn}",
-                            "Next":"doesThingExists"
+                    "Comment": "If a thing with the same name does not exists, create it and attach a new cert and policy to it.",
+                    "StartAt": "fetchThing",
+                    "States": {
+                        "fetchThing": {
+                            "Type": "Task",
+                            "Resource": "${CheckIfThingExists.Arn}",
+                            "Next": "doesThingExists"
                         },
-                        "doesThingExists":{
-                            "Type":"Choice",
-                            "Choices":[
+                        "doesThingExists": {
+                            "Type": "Choice",
+                            "Choices": [
                                 {
-                                    "Variable":"$.exists",
-                                    "BooleanEquals":true,
-                                    "Next":"thingAlreadyExistsFail"
+                                    "Variable": "$.exists",
+                                    "BooleanEquals": true,
+                                    "Next": "thingAlreadyExistsFail"
                                 },
                                 {
-                                    "Variable":"$.exists",
-                                    "BooleanEquals":false,
-                                    "Next":"provisionThing"
+                                    "Variable": "$.exists",
+                                    "BooleanEquals": false,
+                                    "Next": "provisionThing"
                                 }
                             ]
                         },
-                        "thingAlreadyExistsFail":{
-                            "Type":"Fail",
-                            "Error":"Thing already exists."
+                        "thingAlreadyExistsFail": {
+                            "Type": "Fail",
+                            "Error": "Thing already exists."
                         },
-                        "provisionThing":{
-                            "Type":"Parallel",
-                            "Next":"checkProvisioning",
-                            "Branches":[
+                        "provisionThing": {
+                            "Type": "Parallel",
+                            "Next": "checkProvisioning",
+                            "ResultPath": "$.provisionThing",
+                            "Branches": [
                                 {
-                                    "StartAt":"createThing",
-                                    "States":{
-                                        "createThing":{
-                                            "Type":"Task",
-                                            "Resource":"${CreateThing.Arn}",
-                                            "End":true
+                                    "StartAt": "createThing",
+                                    "States": {
+                                        "createThing": {
+                                            "Type": "Task",
+                                            "Resource": "${CreateThing.Arn}",
+                                            "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt":"createKeysAndCerts",
-                                    "States":{
-                                        "createKeysAndCerts":{
-                                            "Type":"Task",
-                                            "Resource":"${CreateKeysAndCert.Arn}",
-                                            "End":true
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        "checkProvisioning":{
-                            "Type":"Task",
-                            "Resource":"${CheckProvisioning.Arn}",
-                            "Next":"attachResourses"
-                        },
-                        "attachResourses":{
-                            "Type":"Parallel",
-                            "Next":"checkAttachments",
-                            "Branches":[
-                                {
-                                    "StartAt":"attachPolicyToCert",
-                                    "States":{
-                                        "attachPolicyToCert":{
-                                            "Type":"Task",
-                                            "Resource":"${AttachPolicyToCert.Arn}",
-                                            "End":true
-                                        }
-                                    }
-                                },
-                                {
-                                    "StartAt":"attachCertToThing",
-                                    "States":{
-                                        "attachCertToThing":{
-                                            "Type":"Task",
-                                            "Resource":"${AttachCertToThing.Arn}",  
-                                            "End":true
+                                    "StartAt": "createKeysAndCerts",
+                                    "States": {
+                                        "createKeysAndCerts": {
+                                            "Type": "Task",
+                                            "Resource": "${CreateKeysAndCert.Arn}",
+                                            "End": true
                                         }
                                     }
                                 }
                             ]
                         },
-                        "checkAttachments":{
-                            "Type":"Task",
-                            "Resource":"${CheckThingAttachments.Arn}",
-                            "End":true
+                        "checkProvisioning": {
+                            "Type": "Task",
+                            "Resource": "${CheckProvisioning.Arn}",
+                            "Next": "attachResources"
+                        },
+                        "attachResources": {
+                            "Type": "Parallel",
+                            "Next": "checkAttachments",
+                            "ResultPath": "$.attachResources",
+                            "Branches": [
+                                {
+                                    "StartAt": "attachPolicyToCert",
+                                    "States": {
+                                        "attachPolicyToCert": {
+                                            "Type": "Task",
+                                            "Resource": "${AttachPolicyToCert.Arn}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "attachCertToThing",
+                                    "States": {
+                                        "attachCertToThing": {
+                                            "Type": "Task",
+                                            "Resource": "${AttachCertToThing.Arn}",
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "checkAttachments": {
+                            "Type": "Task",
+                            "Resource": "${CheckThingAttachments.Arn}",
+                            "Next": "finished"
+                        },
+                        "finished": {
+                            "Type": "Succeed"
                         }
                     }
                 }

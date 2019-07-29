@@ -9,9 +9,9 @@ var ddb = new DynamoDB();
 module.exports =  {
     checkProvisioning: function(event, context, cb) {
         var data = {
-            thingName: event[0].thingName,
-            certificateId: event[1].certificateId,
-            certificateArn: event[1].certificateArn,
+            thingName: event.provisionThing[0].thingName,
+            certificateId: event.provisionThing[1].certificateId,
+            certificateArn: event.provisionThing[1].certificateArn,
             policyName: process.env.POLICY_NAME
         };
 

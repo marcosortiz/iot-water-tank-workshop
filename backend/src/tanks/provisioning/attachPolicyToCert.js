@@ -14,7 +14,7 @@ module.exports =  {
             if (err) {
                 cb(err, null);
             } else {
-                cb(null, event);
+                cb(null, 'Successfully attached policy to certificate.');
             }
         });
     }

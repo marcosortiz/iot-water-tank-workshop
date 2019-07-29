@@ -8,6 +8,6 @@ var iot = new Iot();
 
 module.exports =  {
     checkThingAttachments: function (event, context, cb) {
-        cb(null, event[0]);
+        cb(null, event);
     }
 }
