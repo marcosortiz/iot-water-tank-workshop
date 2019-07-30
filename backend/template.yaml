@@ -513,6 +513,7 @@ Resources:
                                     - !GetAtt DetachPolicyFromCert.Arn
                                     - !GetAtt DisableCert.Arn
                                     # Greengrass Lambda Functions
+                                    # PROVISION
                                     - !GetAtt CheckServiceRole.Arn
                                     - !GetAtt CreateServiceRole.Arn
                                     - !GetAtt CreateGreengrassGroup.Arn
@@ -521,13 +522,25 @@ Resources:
                                     - !GetAtt CreateGreengrassLoggerDefinition.Arn
                                     - !GetAtt CreateGreengrassFunctionDefinition.Arn
                                     - !GetAtt CreateGreengrassResourceDefinition.Arn
-                                    - !GetAtt CreateGreengrassSubscriptionDefinition.Arn 
+                                    - !GetAtt CreateGreengrassSubscriptionDefinition.Arn
+                                    - !GetAtt CreateGreengrassLambdaFunction.Arn
+                                    # - !GetAtt CreateGreengrassGroupVersion.Arn
+                                    # DEPROVISION
+                                    # - !GetAtt DeleteGreengrassGroup.Arn
+                                    # - !GetAtt DeleteGreengrassCoreDefinition.Arn
+                                    # - !GetAtt DeleteGreengrassDeviceDefinition.Arn
+                                    # - !GetAtt DeleteGreengrassLoggerDefinition.Arn
+                                    # - !GetAtt DeleteGreengrassFunctionDefinition.Arn
+                                    # - !GetAtt DeleteGreengrassResourceDefinition.Arn
+                                    # - !GetAtt DeleteGreengrassSubscriptionDefinition.Arn
+                                    # - !GetAtt DeleteGreengrassLambdaFunction.Arn
+
     # Greengrass Lambda Functions
     CheckServiceRole:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/checkGreengrassServiceRole.checkGreengrassServiceRole
+            Handler: tanks/provisioning/greengrass/provision/checkGreengrassServiceRole.checkGreengrassServiceRole
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -541,7 +554,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/addGreengrassServiceRole.addGreengrassServiceRole
+            Handler: tanks/provisioning/greengrass/provision/addGreengrassServiceRole.addGreengrassServiceRole
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -559,7 +572,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/createGreengrassGroup.createGreengrassGroup
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassGroup.createGreengrassGroup
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -573,7 +586,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/createGreengrassCoreDefinition.createGreengrassCoreDefinition
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassCoreDefinition.createGreengrassCoreDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -587,7 +600,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/createGreengrassDeviceDefinition.createGreengrassDeviceDefinition
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassDeviceDefinition.createGreengrassDeviceDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -601,7 +614,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/createGreengrassLoggerDefinition.createGreengrassLoggerDefinition
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassLoggerDefinition.createGreengrassLoggerDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -615,7 +628,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/createGreengrassFunctionDefinition.createGreengrassFunctionDefinition
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassFunctionDefinition.createGreengrassFunctionDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -629,7 +642,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/createGreengrassResourceDefinition.createGreengrassResourceDefinition
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassResourceDefinition.createGreengrassResourceDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -643,7 +656,7 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/createGreengrassSubscriptionDefinition.createGreengrassSubscriptionDefinition
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassSubscriptionDefinition.createGreengrassSubscriptionDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -652,7 +665,26 @@ Resources:
                     - Effect: Allow
                       Action:
                         - greengrass:createSubscriptionDefinition
-                      Resource: '*'          
+                      Resource: '*'
+    CreateGreengrassLambdaFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassLambdaFunction.createGreengrassLambdaFunction
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - AWSGreengrassResourceAccessRolePolicy # Managed Policy
+                - AWSGreengrassFullAccess # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iam:attachRolePolicy
+                        - iam:createRole
+                        - lambda:createFunction
+                        - iam:PassRole
+                      Resource: '*'    
     # Step Functions
     ProvisionThing:
         Type: AWS::StepFunctions::StateMachine
