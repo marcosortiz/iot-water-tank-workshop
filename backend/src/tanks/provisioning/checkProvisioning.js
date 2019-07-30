@@ -10,6 +10,7 @@ module.exports =  {
     checkProvisioning: function(event, context, cb) {
         var data = {
             thingName: event.provisionThing[0].thingName,
+            thingArn: event.provisionThing[0].thingArn,
             certificateId: event.provisionThing[1].certificateId,
             certificateArn: event.provisionThing[1].certificateArn,
             policyName: process.env.POLICY_NAME,

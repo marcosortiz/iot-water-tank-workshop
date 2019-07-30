@@ -7,21 +7,21 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    createGreengrassCoreDefinition: function (event, context, cb) {
+    createGreengrassLoggerDefinition: function (event, context, cb) {
         var params = {
             InitialVersion: {
-                Cores: [
+                Loggers: [
                     {
-                        CertificateArn: event.certificateArn,
-                        Id: `${event.thingName}-Core`,
-                        SyncShadow: true,
-                        ThingArn: event.thingArn
+                        Component: GreengrassSystem,
+                        Id: `${event.thingName}-Logger`,
+                        Level: INFO,
+                        Type: AWSCloudWatch
                     }
                 ]
             },
-            Name: `${event.thingName}-Core-Definition`
+            Name: `${event.thingName}-Logger-Definition`
         };
-        greengrass.createCoreDefinition(params, function (err, data) {
+        greengrass.createLoggerDefinition(params, function (err, data) {
             if (err) {
                 cb(err, null);
             } else {

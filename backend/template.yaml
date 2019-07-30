@@ -516,6 +516,12 @@ Resources:
                                     - !GetAtt CheckServiceRole.Arn
                                     - !GetAtt CreateServiceRole.Arn
                                     - !GetAtt CreateGreengrassGroup.Arn
+                                    - !GetAtt CreateGreengrassCoreDefinition.Arn
+                                    - !GetAtt CreateGreengrassDeviceDefinition.Arn
+                                    - !GetAtt CreateGreengrassLoggerDefinition.Arn
+                                    - !GetAtt CreateGreengrassFunctionDefinition.Arn
+                                    - !GetAtt CreateGreengrassResourceDefinition.Arn
+                                    - !GetAtt CreateGreengrassSubscriptionDefinition.Arn 
     # Greengrass Lambda Functions
     CheckServiceRole:
         Type: AWS::Serverless::Function
@@ -562,7 +568,91 @@ Resources:
                     - Effect: Allow
                       Action:
                         - greengrass:createGroup
-                      Resource: '*'                      
+                      Resource: '*'   
+    CreateGreengrassCoreDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/createGreengrassCoreDefinition.createGreengrassCoreDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createCoreDefinition
+                      Resource: '*'  
+    CreateGreengrassDeviceDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/createGreengrassDeviceDefinition.createGreengrassDeviceDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createDeviceDefinition
+                      Resource: '*'      
+    CreateGreengrassLoggerDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/createGreengrassLoggerDefinition.createGreengrassLoggerDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createLoggerDefinition
+                      Resource: '*'
+    CreateGreengrassFunctionDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/createGreengrassFunctionDefinition.createGreengrassFunctionDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createFunctionDefinition
+                      Resource: '*'
+    CreateGreengrassResourceDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/createGreengrassResourceDefinition.createGreengrassResourceDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createResourceDefinition
+                      Resource: '*'
+    CreateGreengrassSubscriptionDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/createGreengrassSubscriptionDefinition.createGreengrassSubscriptionDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createSubscriptionDefinition
+                      Resource: '*'          
     # Step Functions
     ProvisionThing:
         Type: AWS::StepFunctions::StateMachine
@@ -692,7 +782,7 @@ Resources:
                                 {
                                     "Variable": "$.checkServiceRole.exists",
                                     "BooleanEquals": true,
-                                    "Next": "createGreengrassGroup"
+                                    "Next": "provisionGreengrass"
                                 }
                             ]
                         },
@@ -700,14 +790,55 @@ Resources:
                             "Type": "Task",
                             "Resource": "${CreateServiceRole.Arn}",
                             "ResultPath": "$.createServiceRole",
-                            "Next": "createGreengrassGroup"
+                            "Next": "provisionGreengrass"
                         },
-                        "createGreengrassGroup": {
-                            "Type": "Task",
-                            "Resource": "${CreateGreengrassGroup.Arn}",
-                            "ResultPath": "$.createGroup",
-                            "Next": "finished"
-                        },
+                        "provisionGreengrass": {
+                                "Type": "Parallel",
+                                "Next": "finished",
+                                "ResultPath": "$.provisionGreengrass",
+                                "Branches":[
+                                    {
+                                        "StartAt": "createGreengrassGroup",
+                                        "States":{
+                                            "createGreengrassGroup": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassGroup.Arn}",
+                                                "End": true
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "StartAt": "createCoreDefinition",
+                                        "States":{
+                                            "createCoreDefinition": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassCoreDefinition.Arn}",  
+                                                "End": true
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "StartAt": "createDeviceDefinition",
+                                        "States":{
+                                            "createDeviceDefinition": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassDeviceDefinition.Arn}",  
+                                                "End": true
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "StartAt": "createLoggerDefinition",
+                                        "States":{
+                                            "createLoggerDefinition": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassLoggerDefinition.Arn}",  
+                                                "End": true
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
                         "finished": {
                             "Type": "Succeed"
                         }
