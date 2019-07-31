@@ -58,7 +58,7 @@ module.exports = {
             Timeout: 15
         };
 
-        // await sleep(8000);
+        await sleep(5000);
 
         data = await lambda.createFunction(params).promise();
         return data;

@@ -7,7 +7,7 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    createGreengrassLoggerDefinition: function (event, context, cb) {
+    createGreengrassLoggerDefinition: async (event, context) => {
         var params = {
             InitialVersion: {
                 Loggers: [
@@ -21,12 +21,8 @@ module.exports = {
             },
             Name: `${event.thingName}-Logger-Definition`
         };
-        greengrass.createLoggerDefinition(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.createLoggerDefinition(params).promise();
+
+        return data;
     }
 }

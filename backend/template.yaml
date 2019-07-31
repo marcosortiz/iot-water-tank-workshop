@@ -672,6 +672,7 @@ Resources:
             CodeUri: ./src
             Handler: tanks/provisioning/greengrass/provision/createGreengrassLambdaFunction.createGreengrassLambdaFunction
             Runtime: nodejs8.10
+            Timeout: 15
             Policies:
                 - AWSLambdaExecute # Managed Policy
                 - AWSGreengrassResourceAccessRolePolicy # Managed Policy

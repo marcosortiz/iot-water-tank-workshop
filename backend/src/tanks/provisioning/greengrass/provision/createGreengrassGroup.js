@@ -7,16 +7,12 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    createGreengrassGroup: function (event, context, cb) {
+    createGreengrassGroup: async (event, context) => {
         var params = {
             Name: `${event.thingName}-Group`,
         };
-        greengrass.createGroup(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.createGroup(params).promise();
+        
+        return data;
     }
 }

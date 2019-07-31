@@ -7,7 +7,7 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    createGreengrassDeviceDefinition: function (event, context, cb) {
+    createGreengrassDeviceDefinition: async (event, context) => {
         var params = {
             InitialVersion: {
                 Devices: [
@@ -21,12 +21,8 @@ module.exports = {
             },
             Name: `${event.thingName}-Device-Definition`
         };
-        greengrass.createDeviceDefinition(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.createDeviceDefinition(params).promise();
+        
+        return data;
     }
 }

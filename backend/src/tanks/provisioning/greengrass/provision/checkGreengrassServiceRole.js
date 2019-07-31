@@ -7,20 +7,19 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    checkGreengrassServiceRole: function (event, context, cb) {
+    checkGreengrassServiceRole: async (event, context) => {
         var params = {};
-        greengrass.getServiceRoleForAccount(params, function (err, data) {
-            if (err) {
-                if (err.code === 'UnknownError' && err.message === 'You need to attach an IAM role to this AWS account.') {
-                    data = { exists: false }
-                    cb(null, data)
-                } else {
-                    cb(err, null);
-                }
-            } else if (err === null) {
-                data = { exists: true }
-                cb(null, data)
+
+        try {
+            var data = await greengrass.getServiceRoleForAccount(params).promise();
+            return { exists: true };
+        }
+        catch (err) {
+            if (err.code === 'UnknownError' && err.message === 'You need to attach an IAM role to this AWS account.') {
+                return { exists: false }
+            } else {
+                throw err;
             }
-        });
+        }
     }
 }

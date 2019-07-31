@@ -7,7 +7,7 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    createGreengrassResourceDefinition: function (event, context, cb) {
+    createGreengrassResourceDefinition: async (event, context) => {
         var params = {
             AmznClientToken: 'STRING_VALUE',
             InitialVersion: {
@@ -27,12 +27,8 @@ module.exports = {
                 /* '<__string>': ... */
             }
         };
-        greengrass.createSubscriptionDefinition(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.createSubscriptionDefinition(params).promise();
+
+        return data;
     }
 }

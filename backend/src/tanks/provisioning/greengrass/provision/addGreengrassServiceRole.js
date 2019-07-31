@@ -17,41 +17,31 @@ const ASSUME_ROLE_POLICY_DOC = '{"Version":"2012-10-17","Statement":[{"Effect":"
 const ROLE_DESCRIPTION = 'Greengrass Service Role';
 
 module.exports = {
-    addGreengrassServiceRole: function (event, context, cb) {
+    addGreengrassServiceRole: async (event, context) => {
 
         var params = {
             AssumeRolePolicyDocument: ASSUME_ROLE_POLICY_DOC,
             RoleName: ROLE_NAME,
             Description: ROLE_DESCRIPTION
         };
-        iam.createRole(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                responseData.serviceRoleArn = data.Role.Arn;
 
-                var params = {
-                    PolicyArn: POLICY_ARN,
-                    RoleName: ROLE_NAME
-                };
-                iam.attachRolePolicy(params, function (err, data) {
-                    if (err) {
-                        cb(err, null);
-                    } else {
-                        var params = {
-                            RoleArn: responseData.serviceRoleArn
-                        };
-                        greengrass.associateServiceRoleToAccount(params, function (err, data) {
-                            if (err) {
-                                cb(err, null);
-                            } else {
-                                cb(null, responseData)
-                            }
-                        });
-                    }
-                });
+        var data = await iam.createRole(params);
 
-            }
-        });
+        responseData.serviceRoleArn = data.Role.Arn;
+
+        params = {
+            PolicyArn: POLICY_ARN,
+            RoleName: ROLE_NAME
+        };
+
+        data = await iam.attachRolePolicy(params);
+
+        var params = {
+            RoleArn: responseData.serviceRoleArn
+        };
+
+        data = await greengrass.associateServiceRoleToAccount(params);
+
+        return responseData;
     }
 }

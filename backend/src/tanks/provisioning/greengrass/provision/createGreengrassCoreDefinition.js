@@ -7,7 +7,7 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    createGreengrassCoreDefinition: function (event, context, cb) {
+    createGreengrassCoreDefinition: async (event, context) => {
         var params = {
             InitialVersion: {
                 Cores: [
@@ -21,12 +21,8 @@ module.exports = {
             },
             Name: `${event.thingName}-Core-Definition`
         };
-        greengrass.createCoreDefinition(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.createCoreDefinition(params).promise();
+        
+        return data;
     }
 }
