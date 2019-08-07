@@ -10,6 +10,7 @@ module.exports =  {
         }
     },
     flushTelemetry: function() {
+        console.log('Sending telemetry data')
         var shallowCopy = store_arr.slice();
         store_arr = [];
         return shallowCopy;
