@@ -966,6 +966,26 @@ Resources:
                                     - iot:Publish
                                 Resource:
                                     - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/*'
+    TankLevelEventsTable: 
+        Type: AWS::DynamoDB::Table
+        Properties: 
+            AttributeDefinitions: 
+                - 
+                    AttributeName: tankId
+                    AttributeType: S
+                - 
+                    AttributeName: recordedAt
+                    AttributeType: S
+            KeySchema: 
+                - 
+                    AttributeName: tankId
+                    KeyType: HASH
+                - 
+                    AttributeName: recordedAt
+                    KeyType: RANGE
+            ProvisionedThroughput:
+                ReadCapacityUnits: 1
+                WriteCapacityUnits: 1
 
 Outputs:
     UserPoolId:
@@ -995,3 +1015,6 @@ Outputs:
     RemoveThing:
         Description: State machine arn for removing tanks.
         Value: !Ref RemoveThing
+    TankLevelEventsTable:
+        Description: Dynamo DB table name that holds tank level threshold events.
+        Value: !Ref TankLevelEventsTable
