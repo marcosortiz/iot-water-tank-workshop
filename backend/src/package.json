@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "aws-sdk": "^2.489.0"
+    "aws-sdk": "^2.489.0",
+    "json-size": "^1.0.0"
   },
   "devDependencies": {},
   "scripts": {

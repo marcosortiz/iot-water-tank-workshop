@@ -475,21 +475,6 @@ Resources:
                       Action:
                         - dynamodb:Scan
                       Resource: !GetAtt ThingsTable.Arn
-    DetachPrincipals:
-        Type: AWS::Serverless::Function
-        Properties:
-            CodeUri: ./src
-            Handler: cleanup/detachPrincipals.detachPrincipals
-            Runtime: nodejs8.10
-            Policies:
-                - AWSLambdaExecute # Managed Policy
-                - Version: '2012-10-17' # Policy Document
-                  Statement:
-                    - Effect: Allow
-                      Action:
-                        - iot:ListPolicyPrincipals
-                        - iot:DetachPrincipalPolicy
-                      Resource: '*'
     RepublishTelemetry:
         Type: AWS::Serverless::Function
         Properties:
@@ -529,6 +514,25 @@ Resources:
                       Action:
                         - iotevents:BatchPutMessage
                       Resource: !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/${TankLevelInput}'
+    PutMetricData:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: cw/putMetricData.putMetricData
+            Runtime: nodejs8.10
+            Events:
+              RepublishForIotEvents:              
+                  Type: IoTRule
+                  Properties:
+                    Sql: "SELECT topic(2) as dimension, telemetry from 'tanks/+/telemetry'"
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - cloudwatch:PutMetricData
+                      Resource: '*'
     ProvisionRole:
         Type: AWS::IAM::Role
         Properties : 
