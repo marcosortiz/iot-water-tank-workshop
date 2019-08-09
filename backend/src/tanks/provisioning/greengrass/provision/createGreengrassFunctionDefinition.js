@@ -14,7 +14,7 @@ module.exports = {
                 Functions: [
                     {
                         Id: `${event.thingName}-Function`,
-                        FunctionArn: event,
+                        FunctionArn: `${event.createLambdaFunction.FunctionArn}:1`, // use first published version
                         FunctionConfiguration: {
                             Executable: 'greengrassHelloWorld.function_handler',
                             MemorySize: 128,

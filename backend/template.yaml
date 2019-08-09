@@ -524,7 +524,7 @@ Resources:
                                     - !GetAtt CreateGreengrassResourceDefinition.Arn
                                     - !GetAtt CreateGreengrassSubscriptionDefinition.Arn
                                     - !GetAtt CreateGreengrassLambdaFunction.Arn
-                                    # - !GetAtt CreateGreengrassGroupVersion.Arn
+                                    - !GetAtt CreateGreengrassGroupVersion.Arn
                                     # DEPROVISION
                                     # - !GetAtt DeleteGreengrassGroup.Arn
                                     # - !GetAtt DeleteGreengrassCoreDefinition.Arn
@@ -673,6 +673,9 @@ Resources:
             Handler: tanks/provisioning/greengrass/provision/createGreengrassLambdaFunction.createGreengrassLambdaFunction
             Runtime: nodejs8.10
             Timeout: 15
+            Environment:
+                Variables:
+                    DELAY: 15000
             Policies:
                 - AWSLambdaExecute # Managed Policy
                 - AWSGreengrassResourceAccessRolePolicy # Managed Policy
@@ -685,7 +688,24 @@ Resources:
                         - iam:createRole
                         - lambda:createFunction
                         - iam:PassRole
-                      Resource: '*'    
+                      Resource: '*'
+    CreateGreengrassGroupVersion:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassGroupVersion.createGreengrassGroupVersion
+            Runtime: nodejs8.10
+            Timeout: 15
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - AWSGreengrassResourceAccessRolePolicy # Managed Policy
+                - AWSGreengrassFullAccess # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createGroupVersion
+                      Resource: '*'
     # Step Functions
     ProvisionThing:
         Type: AWS::StepFunctions::StateMachine
@@ -827,7 +847,7 @@ Resources:
                         },
                         "provisionGreengrass": {
                                 "Type": "Parallel",
-                                "Next": "finished",
+                                "Next": "createSubscriptionDefinition",
                                 "ResultPath": "$.provisionGreengrass",
                                 "Branches":[
                                     {
@@ -846,6 +866,23 @@ Resources:
                                             "createCoreDefinition": {
                                                 "Type": "Task",
                                                 "Resource": "${CreateGreengrassCoreDefinition.Arn}",  
+                                                "End": true
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "StartAt": "createLambdaFunction",
+                                        "States": {
+                                            "createLambdaFunction": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassLambdaFunction.Arn}",
+                                                "ResultPath": "$.createLambdaFunction",
+                                                "Next": "createFunctionDefinition"
+                                            },
+                                            "createFunctionDefinition": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassFunctionDefinition.Arn}",
+                                                "ResultPath": "$.createFunctionDefinition",
                                                 "End": true
                                             }
                                         }
@@ -872,6 +909,18 @@ Resources:
                                     }
                                 ]
                             },
+                        "createSubscriptionDefinition": {
+                            "Type": "Task",
+                            "Resource": "${CreateGreengrassSubscriptionDefinition.Arn}",
+                            "Next": "createGroupVersion",
+                            "ResultPath": "$.createSubscriptionDefinition"
+                        },
+                        "createGroupVersion": {
+                            "Type": "Task",
+                            "Resource": "${CreateGreengrassGroupVersion.Arn}",
+                            "ResultPath": "$.createGroupVersion",
+                            "Next": "finished"
+                        },
                         "finished": {
                             "Type": "Succeed"
                         }

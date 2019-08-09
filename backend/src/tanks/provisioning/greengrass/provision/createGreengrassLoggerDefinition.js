@@ -12,10 +12,10 @@ module.exports = {
             InitialVersion: {
                 Loggers: [
                     {
-                        Component: GreengrassSystem,
+                        Component: 'GreengrassSystem',
                         Id: `${event.thingName}-Logger`,
-                        Level: INFO,
-                        Type: AWSCloudWatch
+                        Level: 'INFO',
+                        Type: 'AWSCloudWatch'
                     }
                 ]
             },
