@@ -7,16 +7,17 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    deleteGreengrassDeviceDefinition: function (event, context, cb) {
+    deleteGreengrassDeviceDefinition: async (event, context) => {
+        
+        if (!event.greengrass.DeviceDefinitionId) {
+            return null;
+        }
+
         var params = {
-            DeviceDefinitionId: 'STRING_VALUE' /* required */
+            DeviceDefinitionId: event.greengrass.DeviceDefinitionId
         };
-        greengrass.deleteDeviceDefinition(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.deleteDeviceDefinition(params).promise();
+
+        return data;
     }
 }

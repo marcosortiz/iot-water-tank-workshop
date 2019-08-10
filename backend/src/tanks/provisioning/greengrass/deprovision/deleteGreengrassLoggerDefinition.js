@@ -7,16 +7,17 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    deleteGreengrassLoggerDefinition: function (event, context, cb) {
+    deleteGreengrassLoggerDefinition: async (event, context) => {
+        
+        if (!event.greengrass.LoggerDefinitionId) {
+            return null;
+        }
+
         var params = {
-            LoggerDefinitionId: 'STRING_VALUE' /* required */
+            LoggerDefinitionId: event.greengrass.LoggerDefinitionId
         };
-        greengrass.deleteLoggerDefinition(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.deleteLoggerDefinition(params).promise();
+
+        return data;
     }
 }

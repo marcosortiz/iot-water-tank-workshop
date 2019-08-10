@@ -7,16 +7,12 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    deleteGreengrassGroup: function (event, context, cb) {
+    deleteGreengrassGroup: async (event, context) => {
         var params = {
-            GroupId: 'STRING_VALUE' /* required */
+            GroupId: event.greengrass.GroupId
         };
-        greengrass.deleteGroup(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.deleteGroup(params).promise();
+
+        return data;
     }
 }

@@ -7,16 +7,15 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    deleteGreengrassSubscriptionDefinition: function (event, context, cb) {
+    deleteGreengrassSubscriptionDefinition: async (event, context) => {
+        
+        if (!event.greengrass.SubscriptionDefinitionId) {
+            return null;
+        }
+
         var params = {
-            SubscriptionDefinitionId: 'STRING_VALUE' /* required */
+            SubscriptionDefinitionId: event.greengrass.SubscriptionDefinitionId
         };
-        greengrass.deleteSubscriptionDefinition(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.deleteSubscriptionDefinition(params).promise();
     }
 }

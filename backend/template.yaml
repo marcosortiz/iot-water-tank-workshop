@@ -526,16 +526,19 @@ Resources:
                                     - !GetAtt CreateGreengrassLambdaFunction.Arn
                                     - !GetAtt CreateGreengrassGroupVersion.Arn
                                     # DEPROVISION
-                                    # - !GetAtt DeleteGreengrassGroup.Arn
-                                    # - !GetAtt DeleteGreengrassCoreDefinition.Arn
-                                    # - !GetAtt DeleteGreengrassDeviceDefinition.Arn
-                                    # - !GetAtt DeleteGreengrassLoggerDefinition.Arn
-                                    # - !GetAtt DeleteGreengrassFunctionDefinition.Arn
-                                    # - !GetAtt DeleteGreengrassResourceDefinition.Arn
-                                    # - !GetAtt DeleteGreengrassSubscriptionDefinition.Arn
+                                    - !GetAtt CheckForGreengrass.Arn
+                                    - !GetAtt GetGreengrassGroup.Arn
+                                    - !GetAtt DeleteGreengrassGroup.Arn
+                                    - !GetAtt DeleteGreengrassCoreDefinition.Arn
+                                    - !GetAtt DeleteGreengrassDeviceDefinition.Arn
+                                    - !GetAtt DeleteGreengrassLoggerDefinition.Arn
+                                    - !GetAtt DeleteGreengrassFunctionDefinition.Arn
+                                    - !GetAtt DeleteGreengrassResourceDefinition.Arn
+                                    - !GetAtt DeleteGreengrassSubscriptionDefinition.Arn
                                     # - !GetAtt DeleteGreengrassLambdaFunction.Arn
 
     # Greengrass Lambda Functions
+    # PROVISION GREENGRASS
     CheckServiceRole:
         Type: AWS::Serverless::Function
         Properties:
@@ -574,6 +577,9 @@ Resources:
             CodeUri: ./src
             Handler: tanks/provisioning/greengrass/provision/createGreengrassGroup.createGreengrassGroup
             Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    THINGS_TABLE: !Ref ThingsTable
             Policies:
                 - AWSLambdaExecute # Managed Policy
                 - Version: '2012-10-17' # Policy Document
@@ -582,6 +588,12 @@ Resources:
                       Action:
                         - greengrass:createGroup
                       Resource: '*'   
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:UpdateItem
+                      Resource: !GetAtt ThingsTable.Arn
     CreateGreengrassCoreDefinition:
         Type: AWS::Serverless::Function
         Properties:
@@ -705,6 +717,141 @@ Resources:
                     - Effect: Allow
                       Action:
                         - greengrass:createGroupVersion
+                      Resource: '*'
+    # DEPROVISION GREENGRASS
+    CheckForGreengrass:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/checkForGreengrass.checkForGreengrass
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    THINGS_TABLE: !Ref ThingsTable
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:GetItem
+                      Resource: !GetAtt ThingsTable.Arn
+    GetGreengrassGroup:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/getGreengrassGroup.getGreengrassGroup
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    THINGS_TABLE: !Ref ThingsTable
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - AWSGreengrassResourceAccessRolePolicy # Managed Policy
+                - AWSGreengrassFullAccess # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:GetItem
+                      Resource: !GetAtt ThingsTable.Arn
+    DeleteGreengrassCoreDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassCoreDefinition.deleteGreengrassCoreDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteCoreDefinition
+                      Resource: '*'
+    DeleteGreengrassDeviceDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassDeviceDefinition.deleteGreengrassDeviceDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteDeviceDefinition
+                      Resource: '*'
+    DeleteGreengrassFunctionDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassFunctionDefinition.deleteGreengrassFunctionDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteFunctionDefinition
+                      Resource: '*'
+    DeleteGreengrassLoggerDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassLoggerDefinition.deleteGreengrassLoggerDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteLoggerDefinition
+                      Resource: '*'
+    DeleteGreengrassResourceDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassResourceDefinition.deleteGreengrassResourceDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteResourceDefinition
+                      Resource: '*'
+    DeleteGreengrassSubscriptionDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassSubscriptionDefinition.deleteGreengrassSubscriptionDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteSubscriptionDefinition
+                      Resource: '*'
+    DeleteGreengrassGroup:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassGroup.deleteGreengrassGroup
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteGroup
                       Resource: '*'
     # Step Functions
     ProvisionThing:
@@ -951,7 +1098,111 @@ Resources:
                                 {
                                     "Variable":"$.exists",
                                     "BooleanEquals":true,
+                                    "Next":"checkForGreengrass"
+                                }
+                            ]
+                        },
+                        "checkForGreengrass":{
+                            "Type":"Task",
+                            "Resource":"${CheckForGreengrass.Arn}",
+                            "ResultPath":"$.greengrassExists",
+                            "Next":"doesGreengrassExists"
+                        },
+                        "doesGreengrassExists":{
+                            "Type":"Choice",
+                            "Choices":[
+                                {
+                                    "Variable":"$.greengrassExists",
+                                    "BooleanEquals":false,
                                     "Next":"disableCert"
+                                },
+                                {
+                                    "Variable":"$.greengrassExists",
+                                    "BooleanEquals":true,
+                                    "Next":"getGreengrassGroup"
+                                }
+                            ]
+                        },
+                        "getGreengrassGroup":{
+                            "Type":"Task",
+                            "Resource":"${GetGreengrassGroup.Arn}",
+                            "ResultPath":"$.greengrass",
+                            "Next":"deprovisionGreengrass"
+                        },
+                        "deprovisionGreengrass":{
+                            "Type":"Parallel",
+                            "ResultPath":"$.deprovisionGreengrass",
+                            "Next":"disableCert",
+                            "Branches":[
+                                {
+                                    "StartAt":"deleteCoreDefinition",
+                                    "States":{
+                                        "deleteCoreDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassCoreDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteDeviceDefinition",
+                                    "States":{
+                                        "deleteDeviceDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassDeviceDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteFunctionDefinition",
+                                    "States":{
+                                        "deleteFunctionDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassFunctionDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteLoggerDefinition",
+                                    "States":{
+                                        "deleteLoggerDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassLoggerDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteSubscriptionDefinition",
+                                    "States":{
+                                        "deleteSubscriptionDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassSubscriptionDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteResourceDefinition",
+                                    "States":{
+                                        "deleteResourceDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassResourceDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteGreengrassGroup",
+                                    "States":{
+                                        "deleteGreengrassGroup":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassGroup.Arn}",
+                                            "End":true
+                                        }
+                                    }
                                 }
                             ]
                         },

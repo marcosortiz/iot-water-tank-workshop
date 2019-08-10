@@ -7,16 +7,17 @@ AWS.config.region = process.env.AWS_REGION;
 var greengrass = new Greengrass();
 
 module.exports = {
-    deleteGreengrassResourceDefinition: function (event, context, cb) {
+    deleteGreengrassResourceDefinition: async (event, context) => {
+        
+        if (!event.greengrass.ResourceDefinitionId) {
+            return null;
+        }
+
         var params = {
-            ResourceDefinitionId: 'STRING_VALUE' /* required */
+            ResourceDefinitionId: event.greengrass.ResourceDefinitionId
         };
-        greengrass.deleteResourceDefinition(params, function (err, data) {
-            if (err) {
-                cb(err, null);
-            } else {
-                cb(null, data);
-            }
-        });
+        var data = await greengrass.deleteResourceDefinition(params).promise();
+
+        return data;
     }
 }
