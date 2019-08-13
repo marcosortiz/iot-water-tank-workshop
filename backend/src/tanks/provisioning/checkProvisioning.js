@@ -9,10 +9,12 @@ var ddb = new DynamoDB();
 module.exports =  {
     checkProvisioning: function(event, context, cb) {
         var data = {
-            thingName: event[0].thingName,
-            certificateId: event[1].certificateId,
-            certificateArn: event[1].certificateArn,
-            policyName: process.env.POLICY_NAME
+            thingName: event.provisionThing[0].thingName,
+            thingArn: event.provisionThing[0].thingArn,
+            certificateId: event.provisionThing[1].certificateId,
+            certificateArn: event.provisionThing[1].certificateArn,
+            policyName: process.env.POLICY_NAME,
+            includeGreengrass: event.includeGreengrass
         };
 
         // Write to dynamoDB table
@@ -22,7 +24,8 @@ module.exports =  {
                 'thingName': {S: data.thingName},
                 'certificateId': {S: data.certificateId},
                 'certificateArn': {S: data.certificateArn},
-                'policyName': {S: data.policyName}
+                'policyName': {S: data.policyName},
+                'greengrass': {BOOL: data.includeGreengrass}
             }
         };
         ddb.putItem(ddbParams, function(err, resp1) {

@@ -512,100 +512,564 @@ Resources:
                                     - !GetAtt DetachCertFromThing.Arn
                                     - !GetAtt DetachPolicyFromCert.Arn
                                     - !GetAtt DisableCert.Arn
+                                    # Greengrass Lambda Functions
+                                    # PROVISION
+                                    - !GetAtt CheckServiceRole.Arn
+                                    - !GetAtt CreateServiceRole.Arn
+                                    - !GetAtt CreateGreengrassGroup.Arn
+                                    - !GetAtt CreateGreengrassCoreDefinition.Arn
+                                    - !GetAtt CreateGreengrassDeviceDefinition.Arn
+                                    - !GetAtt CreateGreengrassLoggerDefinition.Arn
+                                    - !GetAtt CreateGreengrassFunctionDefinition.Arn
+                                    - !GetAtt CreateGreengrassResourceDefinition.Arn
+                                    - !GetAtt CreateGreengrassSubscriptionDefinition.Arn
+                                    - !GetAtt CreateGreengrassLambdaFunction.Arn
+                                    - !GetAtt CreateGreengrassGroupVersion.Arn
+                                    # DEPROVISION
+                                    - !GetAtt CheckForGreengrass.Arn
+                                    - !GetAtt GetGreengrassGroup.Arn
+                                    - !GetAtt DeleteGreengrassGroup.Arn
+                                    - !GetAtt DeleteGreengrassCoreDefinition.Arn
+                                    - !GetAtt DeleteGreengrassDeviceDefinition.Arn
+                                    - !GetAtt DeleteGreengrassLoggerDefinition.Arn
+                                    - !GetAtt DeleteGreengrassFunctionDefinition.Arn
+                                    - !GetAtt DeleteGreengrassResourceDefinition.Arn
+                                    - !GetAtt DeleteGreengrassSubscriptionDefinition.Arn
+                                    # - !GetAtt DeleteGreengrassLambdaFunction.Arn
 
+    # Greengrass Lambda Functions
+    # PROVISION GREENGRASS
+    CheckServiceRole:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/checkGreengrassServiceRole.checkGreengrassServiceRole
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:GetServiceRoleForAccount
+                      Resource: '*'
+    CreateServiceRole:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/addGreengrassServiceRole.addGreengrassServiceRole
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - AWSGreengrassResourceAccessRolePolicy # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iam:AttachRolePolicy
+                        - iam:CreateRole
+                        - iam:PassRole
+                        - greengrass:associateServiceRoleToAccount
+                      Resource: '*'          
+    CreateGreengrassGroup:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassGroup.createGreengrassGroup
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    THINGS_TABLE: !Ref ThingsTable
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createGroup
+                      Resource: '*'   
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:UpdateItem
+                      Resource: !GetAtt ThingsTable.Arn
+    CreateGreengrassCoreDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassCoreDefinition.createGreengrassCoreDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createCoreDefinition
+                      Resource: '*'  
+    CreateGreengrassDeviceDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassDeviceDefinition.createGreengrassDeviceDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createDeviceDefinition
+                      Resource: '*'      
+    CreateGreengrassLoggerDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassLoggerDefinition.createGreengrassLoggerDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createLoggerDefinition
+                      Resource: '*'
+    CreateGreengrassFunctionDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassFunctionDefinition.createGreengrassFunctionDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createFunctionDefinition
+                      Resource: '*'
+    CreateGreengrassResourceDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassResourceDefinition.createGreengrassResourceDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createResourceDefinition
+                      Resource: '*'
+    CreateGreengrassSubscriptionDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassSubscriptionDefinition.createGreengrassSubscriptionDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createSubscriptionDefinition
+                      Resource: '*'
+    CreateGreengrassLambdaFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassLambdaFunction.createGreengrassLambdaFunction
+            Runtime: nodejs8.10
+            Timeout: 15
+            Environment:
+                Variables:
+                    DELAY: 15000
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - AWSGreengrassResourceAccessRolePolicy # Managed Policy
+                - AWSGreengrassFullAccess # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iam:attachRolePolicy
+                        - iam:createRole
+                        - lambda:createFunction
+                        - iam:PassRole
+                      Resource: '*'
+    CreateGreengrassGroupVersion:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/provision/createGreengrassGroupVersion.createGreengrassGroupVersion
+            Runtime: nodejs8.10
+            Timeout: 15
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - AWSGreengrassResourceAccessRolePolicy # Managed Policy
+                - AWSGreengrassFullAccess # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:createGroupVersion
+                      Resource: '*'
+    # DEPROVISION GREENGRASS
+    CheckForGreengrass:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/checkForGreengrass.checkForGreengrass
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    THINGS_TABLE: !Ref ThingsTable
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:GetItem
+                      Resource: !GetAtt ThingsTable.Arn
+    GetGreengrassGroup:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/getGreengrassGroup.getGreengrassGroup
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    THINGS_TABLE: !Ref ThingsTable
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - AWSGreengrassResourceAccessRolePolicy # Managed Policy
+                - AWSGreengrassFullAccess # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:GetItem
+                      Resource: !GetAtt ThingsTable.Arn
+    DeleteGreengrassCoreDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassCoreDefinition.deleteGreengrassCoreDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteCoreDefinition
+                      Resource: '*'
+    DeleteGreengrassDeviceDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassDeviceDefinition.deleteGreengrassDeviceDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteDeviceDefinition
+                      Resource: '*'
+    DeleteGreengrassFunctionDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassFunctionDefinition.deleteGreengrassFunctionDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteFunctionDefinition
+                      Resource: '*'
+    DeleteGreengrassLoggerDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassLoggerDefinition.deleteGreengrassLoggerDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteLoggerDefinition
+                      Resource: '*'
+    DeleteGreengrassResourceDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassResourceDefinition.deleteGreengrassResourceDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteResourceDefinition
+                      Resource: '*'
+    DeleteGreengrassSubscriptionDefinition:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassSubscriptionDefinition.deleteGreengrassSubscriptionDefinition
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteSubscriptionDefinition
+                      Resource: '*'
+    DeleteGreengrassGroup:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassGroup.deleteGreengrassGroup
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - greengrass:DeleteGroup
+                      Resource: '*'
+    # Step Functions
     ProvisionThing:
         Type: AWS::StepFunctions::StateMachine
         Properties:
             DefinitionString: !Sub |
                 {
-                    "Comment":"If a thing with the same name does not exists, create it and attach a new cert and policy to it.",
-                    "StartAt":"fetchThing",
-                    "States":{
-                        "fetchThing":{
-                            "Type":"Task",
-                            "Resource":"${CheckIfThingExists.Arn}",
-                            "Next":"doesThingExists"
+                    "Comment": "If a thing with the same name does not exists, create it and attach a new cert and policy to it.",
+                    "StartAt": "fetchThing",
+                    "States": {
+                        "fetchThing": {
+                            "Type": "Task",
+                            "Resource": "${CheckIfThingExists.Arn}",
+                            "Next": "doesThingExists"
                         },
-                        "doesThingExists":{
-                            "Type":"Choice",
-                            "Choices":[
+                        "doesThingExists": {
+                            "Type": "Choice",
+                            "Choices": [
                                 {
-                                    "Variable":"$.exists",
-                                    "BooleanEquals":true,
-                                    "Next":"thingAlreadyExistsFail"
+                                    "Variable": "$.exists",
+                                    "BooleanEquals": true,
+                                    "Next": "thingAlreadyExistsFail"
                                 },
                                 {
-                                    "Variable":"$.exists",
-                                    "BooleanEquals":false,
-                                    "Next":"provisionThing"
+                                    "Variable": "$.exists",
+                                    "BooleanEquals": false,
+                                    "Next": "provisionThing"
                                 }
                             ]
                         },
-                        "thingAlreadyExistsFail":{
-                            "Type":"Fail",
-                            "Error":"Thing already exists."
+                        "thingAlreadyExistsFail": {
+                            "Type": "Fail",
+                            "Error": "Thing already exists."
                         },
-                        "provisionThing":{
-                            "Type":"Parallel",
-                            "Next":"checkProvisioning",
-                            "Branches":[
+                        "provisionThing": {
+                            "Type": "Parallel",
+                            "Next": "checkProvisioning",
+                            "ResultPath": "$.provisionThing",
+                            "Branches": [
                                 {
-                                    "StartAt":"createThing",
-                                    "States":{
-                                        "createThing":{
-                                            "Type":"Task",
-                                            "Resource":"${CreateThing.Arn}",
-                                            "End":true
+                                    "StartAt": "createThing",
+                                    "States": {
+                                        "createThing": {
+                                            "Type": "Task",
+                                            "Resource": "${CreateThing.Arn}",
+                                            "End": true
                                         }
                                     }
                                 },
                                 {
-                                    "StartAt":"createKeysAndCerts",
-                                    "States":{
-                                        "createKeysAndCerts":{
-                                            "Type":"Task",
-                                            "Resource":"${CreateKeysAndCert.Arn}",
-                                            "End":true
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        "checkProvisioning":{
-                            "Type":"Task",
-                            "Resource":"${CheckProvisioning.Arn}",
-                            "Next":"attachResourses"
-                        },
-                        "attachResourses":{
-                            "Type":"Parallel",
-                            "Next":"checkAttachments",
-                            "Branches":[
-                                {
-                                    "StartAt":"attachPolicyToCert",
-                                    "States":{
-                                        "attachPolicyToCert":{
-                                            "Type":"Task",
-                                            "Resource":"${AttachPolicyToCert.Arn}",
-                                            "End":true
-                                        }
-                                    }
-                                },
-                                {
-                                    "StartAt":"attachCertToThing",
-                                    "States":{
-                                        "attachCertToThing":{
-                                            "Type":"Task",
-                                            "Resource":"${AttachCertToThing.Arn}",  
-                                            "End":true
+                                    "StartAt": "createKeysAndCerts",
+                                    "States": {
+                                        "createKeysAndCerts": {
+                                            "Type": "Task",
+                                            "Resource": "${CreateKeysAndCert.Arn}",
+                                            "End": true
                                         }
                                     }
                                 }
                             ]
                         },
-                        "checkAttachments":{
-                            "Type":"Task",
-                            "Resource":"${CheckThingAttachments.Arn}",
-                            "End":true
+                        "checkProvisioning": {
+                            "Type": "Task",
+                            "Resource": "${CheckProvisioning.Arn}",
+                            "Next": "attachResources"
+                        },
+                        "attachResources": {
+                            "Type": "Parallel",
+                            "Next": "checkAttachments",
+                            "ResultPath": "$.attachResources",
+                            "Branches": [
+                                {
+                                    "StartAt": "attachPolicyToCert",
+                                    "States": {
+                                        "attachPolicyToCert": {
+                                            "Type": "Task",
+                                            "Resource": "${AttachPolicyToCert.Arn}",
+                                            "End": true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt": "attachCertToThing",
+                                    "States": {
+                                        "attachCertToThing": {
+                                            "Type": "Task",
+                                            "Resource": "${AttachCertToThing.Arn}",
+                                            "End": true
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "checkAttachments": {
+                            "Type": "Task",
+                            "Resource": "${CheckThingAttachments.Arn}",
+                            "Next": "includeGreengrass"
+                        },
+                        "includeGreengrass": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.includeGreengrass",
+                                    "BooleanEquals": true,
+                                    "Next": "checkServiceRole"
+                                },
+                                {
+                                    "Variable": "$.includeGreengrass",
+                                    "BooleanEquals": false,
+                                    "Next": "finished"
+                                }
+                            ]
+                        },
+                        "checkServiceRole": {
+                            "Type": "Task",
+                            "Resource": "${CheckServiceRole.Arn}",
+                            "Next": "serviceRoleMissing",
+                            "ResultPath": "$.checkServiceRole"
+                        },
+                        "serviceRoleMissing": {
+                            "Type": "Choice",
+                            "Choices": [
+                                {
+                                    "Variable": "$.checkServiceRole.exists",
+                                    "BooleanEquals": false,
+                                    "Next": "createServiceRole"
+                                },
+                                {
+                                    "Variable": "$.checkServiceRole.exists",
+                                    "BooleanEquals": true,
+                                    "Next": "provisionGreengrass"
+                                }
+                            ]
+                        },
+                        "createServiceRole": {
+                            "Type": "Task",
+                            "Resource": "${CreateServiceRole.Arn}",
+                            "ResultPath": "$.createServiceRole",
+                            "Next": "provisionGreengrass"
+                        },
+                        "provisionGreengrass": {
+                                "Type": "Parallel",
+                                "Next": "createSubscriptionDefinition",
+                                "ResultPath": "$.provisionGreengrass",
+                                "Branches":[
+                                    {
+                                        "StartAt": "createGreengrassGroup",
+                                        "States":{
+                                            "createGreengrassGroup": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassGroup.Arn}",
+                                                "End": true
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "StartAt": "createCoreDefinition",
+                                        "States":{
+                                            "createCoreDefinition": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassCoreDefinition.Arn}",  
+                                                "End": true
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "StartAt": "createLambdaFunction",
+                                        "States": {
+                                            "createLambdaFunction": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassLambdaFunction.Arn}",
+                                                "ResultPath": "$.createLambdaFunction",
+                                                "Next": "createFunctionDefinition"
+                                            },
+                                            "createFunctionDefinition": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassFunctionDefinition.Arn}",
+                                                "ResultPath": "$.createFunctionDefinition",
+                                                "End": true
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "StartAt": "createDeviceDefinition",
+                                        "States":{
+                                            "createDeviceDefinition": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassDeviceDefinition.Arn}",  
+                                                "End": true
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "StartAt": "createLoggerDefinition",
+                                        "States":{
+                                            "createLoggerDefinition": {
+                                                "Type": "Task",
+                                                "Resource": "${CreateGreengrassLoggerDefinition.Arn}",  
+                                                "End": true
+                                            }
+                                        }
+                                    }
+                                ]
+                            },
+                        "createSubscriptionDefinition": {
+                            "Type": "Task",
+                            "Resource": "${CreateGreengrassSubscriptionDefinition.Arn}",
+                            "Next": "createGroupVersion",
+                            "ResultPath": "$.createSubscriptionDefinition"
+                        },
+                        "createGroupVersion": {
+                            "Type": "Task",
+                            "Resource": "${CreateGreengrassGroupVersion.Arn}",
+                            "ResultPath": "$.createGroupVersion",
+                            "Next": "finished"
+                        },
+                        "finished": {
+                            "Type": "Succeed"
                         }
                     }
                 }
@@ -634,7 +1098,111 @@ Resources:
                                 {
                                     "Variable":"$.exists",
                                     "BooleanEquals":true,
+                                    "Next":"checkForGreengrass"
+                                }
+                            ]
+                        },
+                        "checkForGreengrass":{
+                            "Type":"Task",
+                            "Resource":"${CheckForGreengrass.Arn}",
+                            "ResultPath":"$.greengrassExists",
+                            "Next":"doesGreengrassExists"
+                        },
+                        "doesGreengrassExists":{
+                            "Type":"Choice",
+                            "Choices":[
+                                {
+                                    "Variable":"$.greengrassExists",
+                                    "BooleanEquals":false,
                                     "Next":"disableCert"
+                                },
+                                {
+                                    "Variable":"$.greengrassExists",
+                                    "BooleanEquals":true,
+                                    "Next":"getGreengrassGroup"
+                                }
+                            ]
+                        },
+                        "getGreengrassGroup":{
+                            "Type":"Task",
+                            "Resource":"${GetGreengrassGroup.Arn}",
+                            "ResultPath":"$.greengrass",
+                            "Next":"deprovisionGreengrass"
+                        },
+                        "deprovisionGreengrass":{
+                            "Type":"Parallel",
+                            "ResultPath":"$.deprovisionGreengrass",
+                            "Next":"disableCert",
+                            "Branches":[
+                                {
+                                    "StartAt":"deleteCoreDefinition",
+                                    "States":{
+                                        "deleteCoreDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassCoreDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteDeviceDefinition",
+                                    "States":{
+                                        "deleteDeviceDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassDeviceDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteFunctionDefinition",
+                                    "States":{
+                                        "deleteFunctionDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassFunctionDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteLoggerDefinition",
+                                    "States":{
+                                        "deleteLoggerDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassLoggerDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteSubscriptionDefinition",
+                                    "States":{
+                                        "deleteSubscriptionDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassSubscriptionDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteResourceDefinition",
+                                    "States":{
+                                        "deleteResourceDefinition":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassResourceDefinition.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"deleteGreengrassGroup",
+                                    "States":{
+                                        "deleteGreengrassGroup":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassGroup.Arn}",
+                                            "End":true
+                                        }
+                                    }
                                 }
                             ]
                         },

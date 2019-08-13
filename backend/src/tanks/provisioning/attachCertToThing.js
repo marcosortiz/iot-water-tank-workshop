@@ -14,7 +14,7 @@ module.exports =  {
             if (err) {
                 cb(err, data);
             } else {
-                cb(null, event);
+                cb(null, 'Successfully attached certificate to thing.');
             }
         });
     }

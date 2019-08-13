@@ -13,7 +13,7 @@ module.exports =  {
             if (err) {
                 cb(err, null);
             } else {
-                cb(null, {thingName: data.thingName} );
+                cb(null, data);
             }
         });
     }
