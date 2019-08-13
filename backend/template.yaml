@@ -533,6 +533,28 @@ Resources:
                       Action:
                         - cloudwatch:PutMetricData
                       Resource: '*'
+    PutItem:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: ddb/putItem.putItem
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    TABLE_NAME: !Ref TankLevelEventsTable
+            Events:
+              RepublishForIotEvents:              
+                  Type: IoTRule
+                  Properties:
+                    Sql: "SELECT * from 'tanks/tankLevelEvent'"
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:PutItem
+                      Resource: !GetAtt  TankLevelEventsTable.Arn
     ProvisionRole:
         Type: AWS::IAM::Role
         Properties : 
@@ -849,8 +871,25 @@ Resources:
                 States:
                     -
                         StateName: normal
+                        OnEnter:
+                            Events:
+                                -
+                                    EventName: Publish MQTT
+                                    Condition: $variable.backToNormal == true
+                                    Actions:
+                                        - 
+                                            IotTopicPublish:
+                                                MqttTopic: tanks/tankLevelEvent
                         OnInput:
                             Events:
+                                -
+                                    EventName: Set tank level
+                                    Condition: true
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: tankLevel
+                                                Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
                                 -
                                     EventName: Min Threshold Exceeded
                                     Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel < $variable.minThreshold'
@@ -877,6 +916,14 @@ Resources:
                         OnInput:
                             Events:
                                 -
+                                    EventName: Set tank level
+                                    Condition: true
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: tankLevel
+                                                Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
+                                -
                                     EventName: Min Threshold Back Ok
                                     Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel >= $variable.minThreshold'
                                     Actions:
@@ -897,9 +944,10 @@ Resources:
                                     EventName: backToNormal
                                     Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel >= $variable.minThreshold && $input.${TankLevelInput}.sensorData.tankLevel <= $variable.maxThreshold'
                                     Actions:
-                                        -
-                                            IotTopicPublish:
-                                                    MqttTopic: tanks/levelBackToNormal
+                                        - 
+                                            SetVariable:
+                                                VariableName: backToNormal
+                                                Value: true
                                     NextState: normal
                         OnEnter:
                             Events:
@@ -909,7 +957,7 @@ Resources:
                                     Actions:
                                         - 
                                             IotTopicPublish:
-                                                MqttTopic: tanks/levelThresholdExceeded
+                                                MqttTopic: tanks/tankLevelEvent
                     -
                         StateName: initializing
                         OnInput:
@@ -918,6 +966,15 @@ Resources:
                                     EventName: normal
                                     Condition: true
                                     NextState: normal
+                            Events:
+                                -
+                                    EventName: Set tank level
+                                    Condition: true
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: tankLevel
+                                                Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
                         OnEnter:
                             Events:
                                 -
@@ -940,6 +997,10 @@ Resources:
                                             SetVariable:
                                                 VariableName: maxThresholdExceeded
                                                 Value: false
+                                        - 
+                                            SetVariable:
+                                                VariableName: tankLevel
+                                                Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
     IoTRepublishRole:
         Type: AWS::IAM::Role
         Properties : 
