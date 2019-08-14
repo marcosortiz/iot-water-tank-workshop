@@ -874,12 +874,15 @@ Resources:
                         OnEnter:
                             Events:
                                 -
-                                    EventName: Publish MQTT
+                                    EventName: Publish Event
                                     Condition: $variable.backToNormal == true
                                     Actions:
                                         - 
                                             IotTopicPublish:
                                                 MqttTopic: tanks/tankLevelEvent
+                                        - 
+                                            Sns:
+                                                TargetArn: !Ref TankLevelEvents
                         OnInput:
                             Events:
                                 -
@@ -952,12 +955,15 @@ Resources:
                         OnEnter:
                             Events:
                                 -
-                                    EventName: Publish MQTT
+                                    EventName: Publish Event
                                     Condition: true
                                     Actions:
                                         - 
                                             IotTopicPublish:
                                                 MqttTopic: tanks/tankLevelEvent
+                                        - 
+                                            Sns:
+                                                TargetArn: !Ref TankLevelEvents
                     -
                         StateName: initializing
                         OnInput:
@@ -1047,6 +1053,8 @@ Resources:
             ProvisionedThroughput:
                 ReadCapacityUnits: 1
                 WriteCapacityUnits: 1
+    TankLevelEvents:
+        Type: AWS::SNS::Topic
 
 Outputs:
     UserPoolId:
