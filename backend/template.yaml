@@ -475,6 +475,91 @@ Resources:
                       Action:
                         - dynamodb:Scan
                       Resource: !GetAtt ThingsTable.Arn
+    RepublishTelemetry:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: events/republish/republishTelemetry.republishTelemetry
+            Runtime: nodejs8.10
+            Events:
+              RepublishForIotEvents:              
+                  Type: IoTRule
+                  Properties:
+                    Sql: "SELECT topic(2) as tankId, telemetry FROM 'tanks/+/telemetry'"
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:DescribeEndpoint
+                        - iot:Publish
+                      Resource: '*'
+    batchPutMessage:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: events/batchPutMessage/batchPutMessage.batchPutMessage
+            Runtime: nodejs8.10
+            Events:
+              RepublishForIotEvents:              
+                  Type: IoTRule
+                  Properties:
+                    Sql: "SELECT * FROM 'tanks/+/checkThresholds'"
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iotevents:BatchPutMessage
+                      Resource: !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/${TankLevelInput}'
+    PutMetricData:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: cw/putMetricData.putMetricData
+            Runtime: nodejs8.10
+            Events:
+              RepublishForIotEvents:              
+                  Type: IoTRule
+                  Properties:
+                    Sql: "SELECT topic(2) as dimension, telemetry from 'tanks/+/telemetry'"
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - cloudwatch:PutMetricData
+                      Resource: '*'
+    PublishTankLevelEvent:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src
+            Handler: notifications/publishTankLevelEvent.publishTankLevelEvent
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    TABLE_NAME: !Ref TankLevelEventsTable
+                    TOPIC_ARN: !Ref TankLevelEvents
+            Events:
+              RepublishForIotEvents:              
+                  Type: IoTRule
+                  Properties:
+                    Sql: "SELECT * from 'tanks/tankLevelEvent'"
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:PutItem
+                      Resource: !GetAtt  TankLevelEventsTable.Arn
+                    - Effect: Allow
+                      Action:
+                        - sns:Publish
+                      Resource: !Ref  TankLevelEvents
     ProvisionRole:
         Type: AWS::IAM::Role
         Properties : 
@@ -1281,6 +1366,262 @@ Resources:
                     }
                 }
             RoleArn: !GetAtt ProvisionRole.Arn
+    IoTEventsRole:
+        Type: AWS::IAM::Role
+        Properties : 
+            AssumeRolePolicyDocument: 
+                Version: "2012-10-17"
+                Statement: 
+                    - 
+                      Effect: "Allow"
+                      Principal: 
+                        Service: 
+                          - "iotevents.amazonaws.com"
+                      Action: 
+                        - "sts:AssumeRole"
+            Path: /service-role/
+            Policies:
+                - 
+                    PolicyName: !Sub '${AWS::StackName}-iotevents'
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            - 
+                                Effect: Allow
+                                Action:
+                                    - iot:Publish
+                                Resource:
+                                    - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/*'
+                            -
+                                Effect: Allow
+                                Action:
+                                    - sns:Publish
+                                Resource:
+                                    - !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*'
+                            -
+                                Effect: Allow
+                                Action:
+                                    - sqs:SendMessage
+                                Resource:
+                                    - !Sub 'arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*'
+                            -
+                                Effect: Allow
+                                Action:
+                                    - lambda:InvokeFunction
+                                Resource:
+                                    - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*'
+                            -
+                                Effect: Allow
+                                Action:
+                                    - firehose:PutRecord
+                                    - firehose:PutRecordBatch
+                                Resource:
+                                    - !Sub 'arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/*'
+                            -
+                                Effect: Allow
+                                Action:
+                                    - iotevents:BatchPutMessage
+                                Resource:
+                                    - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/*'
+    TankLevelInput:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: tankLevel
+            InputDescription: Tank Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    TankLevelDetectorModel:
+        Type: AWS::IoTEvents::DetectorModel
+        Properties:
+            DetectorModelName: TankLevelThresholds
+            DetectorModelDescription: Detects and alerts when tank level goes beyong high and hich-hich thresholds
+            Key: tankId
+            RoleArn: !GetAtt IoTEventsRole.Arn
+            DetectorModelDefinition:
+                InitialStateName: initializing
+                States:
+                    -
+                        StateName: normal
+                        OnEnter:
+                            Events:
+                                -
+                                    EventName: Publish Event
+                                    Condition: $variable.backToNormal == true
+                                    Actions:
+                                        - 
+                                            IotTopicPublish:
+                                                MqttTopic: tanks/tankLevelEvent
+                        OnInput:
+                            Events:
+                                -
+                                    EventName: Set tank level
+                                    Condition: true
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: tankLevel
+                                                Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
+                                -
+                                    EventName: Min Threshold Exceeded
+                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel < $variable.minThreshold'
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: minThresholdExceeded
+                                                Value: true
+                                -
+                                    EventName: Max Threshold Exceeded
+                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel > $variable.maxThreshold'
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: maxThresholdExceeded
+                                                Value: true
+                            TransitionEvents:
+                                -
+                                    EventName: thresholdExceeded
+                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel < $variable.minThreshold || $input.${TankLevelInput}.sensorData.tankLevel > $variable.maxThreshold'
+                                    NextState: dangerous
+                    -
+                        StateName: dangerous
+                        OnInput:
+                            Events:
+                                -
+                                    EventName: Set tank level
+                                    Condition: true
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: tankLevel
+                                                Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
+                                -
+                                    EventName: Min Threshold Back Ok
+                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel >= $variable.minThreshold'
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: minThresholdExceeded
+                                                Value: false
+                                -
+                                    EventName: Max Threshold Back OK
+                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel <= $variable.maxThreshold'
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: maxThresholdExceeded
+                                                Value: false
+                            TransitionEvents:
+                                -
+                                    EventName: backToNormal
+                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel >= $variable.minThreshold && $input.${TankLevelInput}.sensorData.tankLevel <= $variable.maxThreshold'
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: backToNormal
+                                                Value: true
+                                    NextState: normal
+                        OnEnter:
+                            Events:
+                                -
+                                    EventName: Publish Event
+                                    Condition: true
+                                    Actions:
+                                        - 
+                                            IotTopicPublish:
+                                                MqttTopic: tanks/tankLevelEvent
+                    -
+                        StateName: initializing
+                        OnInput:
+                            TransitionEvents:
+                                -
+                                    EventName: normal
+                                    Condition: true
+                                    NextState: normal
+                            Events:
+                                -
+                                    EventName: Set tank level
+                                    Condition: true
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: tankLevel
+                                                Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
+                        OnEnter:
+                            Events:
+                                -
+                                    EventName: Initialize variables
+                                    Condition: true
+                                    Actions:
+                                        - 
+                                            SetVariable:
+                                                VariableName: minThreshold
+                                                Value: 15
+                                        - 
+                                            SetVariable:
+                                                VariableName: maxThreshold
+                                                Value: 85
+                                        - 
+                                            SetVariable:
+                                                VariableName: minThresholdExceeded
+                                                Value: false
+                                        - 
+                                            SetVariable:
+                                                VariableName: maxThresholdExceeded
+                                                Value: false
+                                        - 
+                                            SetVariable:
+                                                VariableName: tankLevel
+                                                Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
+    IoTRepublishRole:
+        Type: AWS::IAM::Role
+        Properties : 
+            AssumeRolePolicyDocument: 
+                Version: "2012-10-17"
+                Statement: 
+                    - 
+                      Effect: "Allow"
+                      Principal: 
+                        Service: 
+                          - "iot.amazonaws.com"
+                      Action: 
+                        - "sts:AssumeRole"
+            Path: /service-role/
+            Policies:
+                - 
+                    PolicyName: !Sub '${AWS::StackName}-iotrepublish'
+                    PolicyDocument:
+                        Version: '2012-10-17'
+                        Statement:
+                            - 
+                                Effect: Allow
+                                Action:
+                                    - iot:Publish
+                                Resource:
+                                    - !Sub 'arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/*'
+    TankLevelEventsTable: 
+        Type: AWS::DynamoDB::Table
+        Properties: 
+            AttributeDefinitions: 
+                - 
+                    AttributeName: tankId
+                    AttributeType: S
+                - 
+                    AttributeName: recordedAt
+                    AttributeType: S
+            KeySchema: 
+                - 
+                    AttributeName: tankId
+                    KeyType: HASH
+                - 
+                    AttributeName: recordedAt
+                    KeyType: RANGE
+            ProvisionedThroughput:
+                ReadCapacityUnits: 1
+                WriteCapacityUnits: 1
+    TankLevelEvents:
+        Type: AWS::SNS::Topic
 
 Outputs:
     UserPoolId:
@@ -1310,3 +1651,6 @@ Outputs:
     RemoveThing:
         Description: State machine arn for removing tanks.
         Value: !Ref RemoveThing
+    TankLevelEventsTable:
+        Description: Dynamo DB table name that holds tank level threshold events.
+        Value: !Ref TankLevelEventsTable
