@@ -250,8 +250,8 @@ Resources:
     AttachCertToThing:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/attachCertToThing.attachCertToThing
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: attachCertToThing.attachCertToThing
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -264,8 +264,8 @@ Resources:
     AttachPolicyToCert:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/attachPolicyToCert.attachPolicyToCert
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: attachPolicyToCert.attachPolicyToCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -281,8 +281,8 @@ Resources:
     CheckIfThingExists:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/checkIfThingExists.checkIfThingExists
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: checkIfThingExists.checkIfThingExists
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -295,8 +295,8 @@ Resources:
     CheckProvisioning:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/checkProvisioning.checkProvisioning
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: checkProvisioning.checkProvisioning
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -314,16 +314,16 @@ Resources:
     CheckThingAttachments:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/checkThingAttachments.checkThingAttachments
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: checkThingAttachments.checkThingAttachments
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
     CreateKeysAndCert:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/createKeysAndCert.createKeysAndCert
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: createKeysAndCert.createKeysAndCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -343,8 +343,8 @@ Resources:
     CreateThing:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/createThing.createThing
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: createThing.createThing
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -357,8 +357,8 @@ Resources:
     DeleteCert:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/deleteCert.deleteCert
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: deleteCert.deleteCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -378,8 +378,8 @@ Resources:
     DeleteMetadata:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/deleteMetadata.deleteMetadata
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: deleteMetadata.deleteMetadata
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -395,8 +395,8 @@ Resources:
     DeleteThing:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/deleteThing.deleteThing
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: deleteThing.deleteThing
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -409,8 +409,8 @@ Resources:
     DetachCertFromThing:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/detachCertFromThing.detachCertFromThing
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: detachCertFromThing.detachCertFromThing
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -423,8 +423,8 @@ Resources:
     DetachPolicyFromCert:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/detachPolicyFromCert.detachPolicyFromCert
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: detachPolicyFromCert.detachPolicyFromCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -440,8 +440,8 @@ Resources:
     DisableCert:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/disableCert.disableCert
+            CodeUri: ./src/tanks/provisioning/iot-core
+            Handler: disableCert.disableCert
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -461,8 +461,8 @@ Resources:
     ListTanks:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/listTanks.listTanks
+            CodeUri: ./src/tanks/ddb
+            Handler: listTanks.listTanks
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -478,8 +478,8 @@ Resources:
     RepublishTelemetry:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: events/republish/republishTelemetry.republishTelemetry
+            CodeUri: ./src/events/republish
+            Handler: republishTelemetry.republishTelemetry
             Runtime: nodejs8.10
             Events:
               RepublishForIotEvents:              
@@ -498,8 +498,8 @@ Resources:
     batchPutMessage:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: events/batchPutMessage/batchPutMessage.batchPutMessage
+            CodeUri: ./src/events/batchPutMessage
+            Handler: batchPutMessage.batchPutMessage
             Runtime: nodejs8.10
             Events:
               RepublishForIotEvents:              
@@ -517,8 +517,8 @@ Resources:
     PutMetricData:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: cw/putMetricData.putMetricData
+            CodeUri: ./src/cw
+            Handler: putMetricData.putMetricData
             Runtime: nodejs8.10
             Events:
               RepublishForIotEvents:              
@@ -536,8 +536,8 @@ Resources:
     PublishTankLevelEvent:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: notifications/publishTankLevelEvent.publishTankLevelEvent
+            CodeUri: ./src/notifications
+            Handler: publishTankLevelEvent.publishTankLevelEvent
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -627,8 +627,8 @@ Resources:
     CheckServiceRole:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/checkGreengrassServiceRole.checkGreengrassServiceRole
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: checkGreengrassServiceRole.checkGreengrassServiceRole
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -641,8 +641,8 @@ Resources:
     CreateServiceRole:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/addGreengrassServiceRole.addGreengrassServiceRole
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: addGreengrassServiceRole.addGreengrassServiceRole
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -659,8 +659,8 @@ Resources:
     CreateGreengrassGroup:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/createGreengrassGroup.createGreengrassGroup
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: createGreengrassGroup.createGreengrassGroup
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -682,8 +682,8 @@ Resources:
     CreateGreengrassCoreDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/createGreengrassCoreDefinition.createGreengrassCoreDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: createGreengrassCoreDefinition.createGreengrassCoreDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -696,8 +696,8 @@ Resources:
     CreateGreengrassDeviceDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/createGreengrassDeviceDefinition.createGreengrassDeviceDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: createGreengrassDeviceDefinition.createGreengrassDeviceDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -710,8 +710,8 @@ Resources:
     CreateGreengrassLoggerDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/createGreengrassLoggerDefinition.createGreengrassLoggerDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: createGreengrassLoggerDefinition.createGreengrassLoggerDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -724,8 +724,8 @@ Resources:
     CreateGreengrassFunctionDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/createGreengrassFunctionDefinition.createGreengrassFunctionDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: createGreengrassFunctionDefinition.createGreengrassFunctionDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -738,8 +738,8 @@ Resources:
     CreateGreengrassResourceDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/createGreengrassResourceDefinition.createGreengrassResourceDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: createGreengrassResourceDefinition.createGreengrassResourceDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -752,8 +752,8 @@ Resources:
     CreateGreengrassSubscriptionDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/createGreengrassSubscriptionDefinition.createGreengrassSubscriptionDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: createGreengrassSubscriptionDefinition.createGreengrassSubscriptionDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -766,8 +766,8 @@ Resources:
     CreateGreengrassLambdaFunction:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/createGreengrassLambdaFunction.createGreengrassLambdaFunction
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: createGreengrassLambdaFunction.createGreengrassLambdaFunction
             Runtime: nodejs8.10
             Timeout: 15
             Environment:
@@ -789,8 +789,8 @@ Resources:
     CreateGreengrassGroupVersion:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/provision/createGreengrassGroupVersion.createGreengrassGroupVersion
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: createGreengrassGroupVersion.createGreengrassGroupVersion
             Runtime: nodejs8.10
             Timeout: 15
             Policies:
@@ -807,8 +807,8 @@ Resources:
     CheckForGreengrass:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/deprovision/checkForGreengrass.checkForGreengrass
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision
+            Handler: checkForGreengrass.checkForGreengrass
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -824,8 +824,8 @@ Resources:
     GetGreengrassGroup:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/deprovision/getGreengrassGroup.getGreengrassGroup
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision
+            Handler: getGreengrassGroup.getGreengrassGroup
             Runtime: nodejs8.10
             Environment:
                 Variables:
@@ -843,8 +843,8 @@ Resources:
     DeleteGreengrassCoreDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassCoreDefinition.deleteGreengrassCoreDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision
+            Handler: deleteGreengrassCoreDefinition.deleteGreengrassCoreDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -857,8 +857,8 @@ Resources:
     DeleteGreengrassDeviceDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassDeviceDefinition.deleteGreengrassDeviceDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision
+            Handler: deleteGreengrassDeviceDefinition.deleteGreengrassDeviceDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -871,8 +871,8 @@ Resources:
     DeleteGreengrassFunctionDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassFunctionDefinition.deleteGreengrassFunctionDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision
+            Handler: deleteGreengrassFunctionDefinition.deleteGreengrassFunctionDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -885,8 +885,8 @@ Resources:
     DeleteGreengrassLoggerDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassLoggerDefinition.deleteGreengrassLoggerDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision
+            Handler: deleteGreengrassLoggerDefinition.deleteGreengrassLoggerDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -899,8 +899,8 @@ Resources:
     DeleteGreengrassResourceDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassResourceDefinition.deleteGreengrassResourceDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision
+            Handler: deleteGreengrassResourceDefinition.deleteGreengrassResourceDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -913,8 +913,8 @@ Resources:
     DeleteGreengrassSubscriptionDefinition:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassSubscriptionDefinition.deleteGreengrassSubscriptionDefinition
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision/
+            Handler: deleteGreengrassSubscriptionDefinition.deleteGreengrassSubscriptionDefinition
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy
@@ -927,8 +927,8 @@ Resources:
     DeleteGreengrassGroup:
         Type: AWS::Serverless::Function
         Properties:
-            CodeUri: ./src
-            Handler: tanks/provisioning/greengrass/deprovision/deleteGreengrassGroup.deleteGreengrassGroup
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision/
+            Handler: deleteGreengrassGroup.deleteGreengrassGroup
             Runtime: nodejs8.10
             Policies:
                 - AWSLambdaExecute # Managed Policy

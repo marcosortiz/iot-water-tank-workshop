@@ -1,7 +1,7 @@
 'use strict'
 
-var AWS      = require('aws-sdk/global');
-var CloudWatch      = require('aws-sdk/clients/cloudwatch');
+var AWS        = require('aws-sdk/global');
+var CloudWatch = require('aws-sdk/clients/cloudwatch');
 var jsonSize   = require('json-size');
 
 const METRICS_NAMESPACE             = 'iotWaterTankDemo';

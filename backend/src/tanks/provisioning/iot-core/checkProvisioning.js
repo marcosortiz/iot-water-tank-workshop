@@ -14,7 +14,7 @@ module.exports =  {
             certificateId: event.provisionThing[1].certificateId,
             certificateArn: event.provisionThing[1].certificateArn,
             policyName: process.env.POLICY_NAME,
-            includeGreengrass: event.includeGreengrass
+            includeGreengrass: event.includeGreengrass || false
         };
 
         // Write to dynamoDB table
@@ -28,6 +28,7 @@ module.exports =  {
                 'greengrass': {BOOL: data.includeGreengrass}
             }
         };
+        console.log('ddbParams', ddbParams);
         ddb.putItem(ddbParams, function(err, resp1) {
             cb(err, data)
         });
