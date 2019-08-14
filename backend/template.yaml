@@ -533,15 +533,16 @@ Resources:
                       Action:
                         - cloudwatch:PutMetricData
                       Resource: '*'
-    PutItem:
+    PublishTankLevelEvent:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src
-            Handler: ddb/putItem.putItem
+            Handler: notifications/publishTankLevelEvent.publishTankLevelEvent
             Runtime: nodejs8.10
             Environment:
                 Variables:
                     TABLE_NAME: !Ref TankLevelEventsTable
+                    TOPIC_ARN: !Ref TankLevelEvents
             Events:
               RepublishForIotEvents:              
                   Type: IoTRule
@@ -555,6 +556,10 @@ Resources:
                       Action:
                         - dynamodb:PutItem
                       Resource: !GetAtt  TankLevelEventsTable.Arn
+                    - Effect: Allow
+                      Action:
+                        - sns:Publish
+                      Resource: !Ref  TankLevelEvents
     ProvisionRole:
         Type: AWS::IAM::Role
         Properties : 
@@ -880,9 +885,6 @@ Resources:
                                         - 
                                             IotTopicPublish:
                                                 MqttTopic: tanks/tankLevelEvent
-                                        - 
-                                            Sns:
-                                                TargetArn: !Ref TankLevelEvents
                         OnInput:
                             Events:
                                 -
@@ -961,9 +963,6 @@ Resources:
                                         - 
                                             IotTopicPublish:
                                                 MqttTopic: tanks/tankLevelEvent
-                                        - 
-                                            Sns:
-                                                TargetArn: !Ref TankLevelEvents
                     -
                         StateName: initializing
                         OnInput:
