@@ -599,6 +599,7 @@ Resources:
                                     - !GetAtt DisableCert.Arn
                                     # Greengrass Lambda Functions
                                     # PROVISION
+                                    - !GetAtt AddGreengrassConfigFile.Arn
                                     - !GetAtt CheckServiceRole.Arn
                                     - !GetAtt CreateServiceRole.Arn
                                     - !GetAtt CreateGreengrassGroup.Arn
@@ -624,6 +625,25 @@ Resources:
 
     # Greengrass Lambda Functions
     # PROVISION GREENGRASS
+    AddGreengrassConfigFile:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: addGreengrassConfigFile.addGreengrassConfigFile
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    S3_BUCKET: !Ref iotKeysAndCertsBucket
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:DescribeEndpoint
+                        - s3:GetObject
+                        - s3:PutObject
+                      Resource: '*'
     CheckServiceRole:
         Type: AWS::Serverless::Function
         Properties:
@@ -769,7 +789,7 @@ Resources:
             CodeUri: ./src/tanks/provisioning/greengrass/provision
             Handler: createGreengrassLambdaFunction.createGreengrassLambdaFunction
             Runtime: nodejs8.10
-            Timeout: 15
+            Timeout: 60
             Environment:
                 Variables:
                     DELAY: 15000
@@ -1135,6 +1155,16 @@ Resources:
                                             "createLoggerDefinition": {
                                                 "Type": "Task",
                                                 "Resource": "${CreateGreengrassLoggerDefinition.Arn}",  
+                                                "End": true
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "StartAt": "addConfigFile",
+                                        "States":{
+                                            "addConfigFile": {
+                                                "Type": "Task",
+                                                "Resource": "${AddGreengrassConfigFile.Arn}",  
                                                 "End": true
                                             }
                                         }
