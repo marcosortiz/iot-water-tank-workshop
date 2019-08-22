@@ -560,6 +560,20 @@ Resources:
                       Action:
                         - sns:Publish
                       Resource: !Ref  TankLevelEvents
+    GetMetricData:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/cw
+            Handler: getMetricData.getMetricData
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - cloudwatch:GetMetricData
+                      Resource: '*'
     ProvisionRole:
         Type: AWS::IAM::Role
         Properties : 
@@ -938,6 +952,24 @@ Resources:
                       Action:
                         - greengrass:DeleteGroup
                       Resource: '*'
+    QueryTankThresholdEvents:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/events/queryEvents
+            Handler: queryEvents.queryEvents
+            Runtime: nodejs8.10
+            Timeout: 15
+            Environment:
+                Variables:
+                    TABLE_NAME: !Ref TankLevelEventsTable
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - dynamodb:Query
+                      Resource: !GetAtt TankLevelEventsTable.Arn
     # Step Functions
     ProvisionThing:
         Type: AWS::StepFunctions::StateMachine
@@ -1652,5 +1684,11 @@ Outputs:
         Description: State machine arn for removing tanks.
         Value: !Ref RemoveThing
     TankLevelEventsTable:
-        Description: Dynamo DB table name that holds tank level threshold events.
+        Description: Dynamo DB table name that holds tank level threshold events
         Value: !Ref TankLevelEventsTable
+    QueryTankThresholdEvents:
+        Description: Lambda function used to list talk level events
+        Value: !Ref QueryTankThresholdEvents
+    GetMetricData:
+        Description: Lambda function used to get last 15 mins of tank Level metric for a given tank
+        Value: !Ref GetMetricData
