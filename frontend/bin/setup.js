@@ -13,7 +13,9 @@ const KEYS = [
     'UserPoolId',
     'userPoolWebClientId',
     'IotWebPolicy',
-    'ListTanks'
+    'ListTanks',
+    'QueryTankThresholdEvents',
+    'GetMetricData'
 ];
 
 var region = null;
@@ -69,7 +71,7 @@ function fetchConfig(keys, outputs) {
                     config['iotEndpointAddress'] = data.endpointAddress
                     var content = JSON.stringify(config, null, 4);
                     fs.writeFileSync(FRONTEND_CONFIG_FILE_PATH, content);
-                    console.log(`Backend configuration saved to ${BACKEND_CONFIG_FILE_PATH}`);
+                    console.log(`Frontend configuration saved to ${FRONTEND_CONFIG_FILE_PATH}`);
                 }
             });
         }     

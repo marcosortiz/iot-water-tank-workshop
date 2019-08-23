@@ -141,7 +141,9 @@ Resources:
                               Action:
                                 - lambda:InvokeFunction
                               Resource: 
+                                - !GetAtt GetMetricData.Arn
                                 - !GetAtt ListTanks.Arn
+                                - !GetAtt QueryTankThresholdEvents.Arn
     IdentityPoolRoleAttachment:
         Type: AWS::Cognito::IdentityPoolRoleAttachment
         Properties:
