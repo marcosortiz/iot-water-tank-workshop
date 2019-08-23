@@ -55,7 +55,7 @@ module.exports = {
             Publish: true,
             Role: responseData.lambdaRoleArn,
             Runtime: "python3.7",
-            Timeout: 15
+            Timeout: 60
         };
 
         await sleep(Number(process.env.DELAY));
