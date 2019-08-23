@@ -10,6 +10,8 @@ export default {
     iotEndpointAddress: Config.iotEndpointAddress,
     IotPolicyName: Config.IotWebPolicy,
     lambda: {
-        ListTanks: Config.ListTanks
+        ListTanks: Config.ListTanks,
+        QueryTankLevelEvents: Config.QueryTankThresholdEvents,
+        GetMetricData: Config.GetMetricData
     }
 };
