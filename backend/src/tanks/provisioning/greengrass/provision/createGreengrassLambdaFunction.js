@@ -51,7 +51,6 @@ module.exports = {
             Description: `Greengrass Lambda Function for ${event.thingName}`,
             FunctionName: `${event.thingName}-GreengrassLambdaFunction`,
             Handler: "greengrassHelloWorld.function_handler",
-            MemorySize: 128,
             Publish: true,
             Role: responseData.lambdaRoleArn,
             Runtime: "python3.7",

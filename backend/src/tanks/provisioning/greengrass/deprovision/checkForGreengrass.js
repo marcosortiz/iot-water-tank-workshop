@@ -18,10 +18,6 @@ module.exports = {
 
         var data = await ddb.get(params).promise();
 
-        if (data.Item && data.Item.greengrass) {
-            return data.Item.greengrass;
-        }
-
-        return false;
+        return data.Item;
     }
 }

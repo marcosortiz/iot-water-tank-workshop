@@ -9,7 +9,7 @@ var greengrass = new Greengrass();
 module.exports = {
     createGreengrassGroupVersion: async (event, context) => {
         var params = {
-            GroupId: event.provisionGreengrass[0].Id,
+            GroupId: event.provisionGreengrass[0].createGreengrassGroup.Id,
             CoreDefinitionVersionArn: event.provisionGreengrass[1].LatestVersionArn,
             FunctionDefinitionVersionArn: event.provisionGreengrass[2].createFunctionDefinition.LatestVersionArn,
             DeviceDefinitionVersionArn: event.provisionGreengrass[3].LatestVersionArn,
