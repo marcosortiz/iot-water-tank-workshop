@@ -1,6 +1,6 @@
 {
     "region": "us-east-1",
-    "samS3BucketName": "jonslo-watertanks-sam-test",
+    "samS3BucketName": "<S3_BUCKET_TO_USE_WITH_AWS_SAM>",
     "cloudformationStackName": "iot-water-tank-workshop",
-    "username": "jonslo@amazon.com"
+    "username": "<YOUR_EMAIL_ADDRESS_HERE>"
 }
