@@ -1,7 +1,8 @@
 import React from 'react';
-import { Card, Header, Icon, Label, List, Popup, Segment } from 'semantic-ui-react';
+import { Card, Icon, List, Message, Popup } from 'semantic-ui-react';
 import TankLevelGauge from './TankLevelGauge';
 import { Hub } from 'aws-amplify';
+import HistoricalDataModal from './modal/TankModal';
 
 class TankCard extends React.Component {
 
@@ -16,6 +17,10 @@ class TankCard extends React.Component {
         telemetry: [],
         minColor: 'blue',
         maxColor: 'blue',
+        historicalData: {
+            tankLevel: [],
+            events: []
+        }
     };
 
     updateTelemetry(data, maxSize=900) {
@@ -98,14 +103,12 @@ class TankCard extends React.Component {
             )    
         } else {
             return (
-                <Segment placeholder>
-                    <Header icon>
-                        <Icon loading name='spinner' />
-                    </Header>
-                    <Segment.Inline>
-                        <Label> No data available yet. </Label>
-                    </Segment.Inline>
-                </Segment>
+                <Message icon>
+                    <Icon name='spinner' loading />
+                    <Message.Content>
+                        No data available yet.
+                    </Message.Content>
+                </Message>
             )
         }
     }
@@ -118,27 +121,19 @@ class TankCard extends React.Component {
                         <Card.Header textAlign="center">
                             {this.props.tankName}
                         </Card.Header>
-                        <Card.Meta textAlign="center" >
-                            <Popup
-                                trigger={<Icon circular name='rss' inverted color='grey' />}
-                                content={`MQTT telemetry topic for ${this.props.tankName}.`}
-                                size='mini'
-                            /> tanks/{this.props.tankName}/telemetry 
-
-
-                        </Card.Meta>
                     </Card.Content>
                     <Card.Content textAlign='center'>
                         {this.getWidget()}
+                        <HistoricalDataModal tankId={this.props.tankName} />
                     </Card.Content>
                     <Card.Content textAlign="center" extra>
-                        <Card.Header textAlign="center">Shadow Values</Card.Header>
                         <List horizontal>
                             <List.Item>
                                 <List.Content>
                                     <Popup
+                                        header='telemetryPerMinRate'
                                         trigger={<Icon circular name='wifi' inverted color='blue' />}
-                                        content='Telemetry per minute pushing rate.'
+                                        content='The per minute rate that this tank publishes telemetry data.'
                                         size='mini'
                                     /> {this.state.shadow.telemetryRate} tpm
                                 </List.Content>
@@ -146,6 +141,7 @@ class TankCard extends React.Component {
                             <List.Item>
                                 <List.Content>
                                     <Popup
+                                        header='maxTankLevelTjreshold'
                                         trigger={<Icon circular name='thermometer full' inverted color={this.state.maxColor} />}
                                         content='Max tank level threshold (%).'
                                         size='mini'
@@ -156,6 +152,7 @@ class TankCard extends React.Component {
                                 <List.Content>
 
                                     <Popup
+                                        header='minTankLevelThreshold'
                                         trigger={<Icon circular name='thermometer empty' inverted color={this.state.minColor}  />}
                                         content='Min tank level threshold (%).'
                                         size='mini'
