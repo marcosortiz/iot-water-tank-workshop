@@ -103,8 +103,7 @@ class TankLevelChart extends React.Component {
                             <YAxis />
                             <Tooltip />
                             <Legend />
-                            <ReferenceLine y={85} label="Max" stroke="red" strokeWidth={3} />
-                            <ReferenceLine y={15} label="Min" stroke="red" strokeWidth={3} />
+                            <ReferenceLine y={85} label="Max (85)" stroke="red" strokeWidth={3} />
                             <Line type="monotone" dataKey="tankLevel" strokeWidth={3} stroke="#8884d8" dot={false} activeDot={{ r: 8 }} />
                         </LineChart>
                     </div>

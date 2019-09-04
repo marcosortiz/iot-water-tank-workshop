@@ -1528,14 +1528,6 @@ Resources:
                                                 VariableName: tankLevel
                                                 Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
                                 -
-                                    EventName: Min Threshold Exceeded
-                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel < $variable.minThreshold'
-                                    Actions:
-                                        - 
-                                            SetVariable:
-                                                VariableName: minThresholdExceeded
-                                                Value: true
-                                -
                                     EventName: Max Threshold Exceeded
                                     Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel > $variable.maxThreshold'
                                     Actions:
@@ -1546,7 +1538,7 @@ Resources:
                             TransitionEvents:
                                 -
                                     EventName: thresholdExceeded
-                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel < $variable.minThreshold || $input.${TankLevelInput}.sensorData.tankLevel > $variable.maxThreshold'
+                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel > $variable.maxThreshold'
                                     NextState: dangerous
                     -
                         StateName: dangerous
@@ -1561,14 +1553,6 @@ Resources:
                                                 VariableName: tankLevel
                                                 Value: !Sub '$input.${TankLevelInput}.sensorData.tankLevel'
                                 -
-                                    EventName: Min Threshold Back Ok
-                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel >= $variable.minThreshold'
-                                    Actions:
-                                        - 
-                                            SetVariable:
-                                                VariableName: minThresholdExceeded
-                                                Value: false
-                                -
                                     EventName: Max Threshold Back OK
                                     Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel <= $variable.maxThreshold'
                                     Actions:
@@ -1579,7 +1563,7 @@ Resources:
                             TransitionEvents:
                                 -
                                     EventName: backToNormal
-                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel >= $variable.minThreshold && $input.${TankLevelInput}.sensorData.tankLevel <= $variable.maxThreshold'
+                                    Condition: !Sub '$input.${TankLevelInput}.sensorData.tankLevel <= $variable.maxThreshold'
                                     Actions:
                                         - 
                                             SetVariable:
@@ -1620,16 +1604,8 @@ Resources:
                                     Actions:
                                         - 
                                             SetVariable:
-                                                VariableName: minThreshold
-                                                Value: 15
-                                        - 
-                                            SetVariable:
                                                 VariableName: maxThreshold
                                                 Value: 85
-                                        - 
-                                            SetVariable:
-                                                VariableName: minThresholdExceeded
-                                                Value: false
                                         - 
                                             SetVariable:
                                                 VariableName: maxThresholdExceeded

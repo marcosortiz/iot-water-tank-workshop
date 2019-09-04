@@ -30,8 +30,7 @@ function initProps(obj, opts) {
     };
     obj.props.shadow = {
         telemetryPerMinRate: 4,
-        minTankLevelThreshold: 15,
-        maxTankLevelTjreshold: 85
+        maxTankLevelThreshold: 85
     }
     obj.props.logger = TankLogger.getLogger(obj.props.thingName);
 }
