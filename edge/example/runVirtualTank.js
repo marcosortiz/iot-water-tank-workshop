@@ -22,5 +22,5 @@ params = {
     period: period,
     tankLevel: initialTankLevel
 };
-console.log(params);
+
 var tank = new Tank(params);
