@@ -9,29 +9,43 @@ var Constants = require(`${__dirname}/constants`);
 var Iot = require(`${__dirname}/iot`);
 
 const DEFAULT_TELEMETRY_INTERVAL = 15000 // in milliseconds
-const DEFAULT_VERSION = '1.0'
-const DEFAULT_TANK_LEVEL = 50;
-const DEFAULT_STATUS = Constants.FILLING_STATUS;
+
+const DEFAULT_INITIAL_TANK_LEVEL = 50;
+const DEFAULT_TARGET_TANK_LEVEL  = 80;
+const DEFAULT_PERIOD = 300 // 15 * 60 (seconds)
+
+function getStatus(initialTankLevel, targetTankLevel) {DEFAULT_TARGET_TANK_LEVEL
+    if (initialTankLevel < targetTankLevel) {
+        return Constants.FILLING_STATUS;
+    } else if (initialTankLevel > targetTankLevel) {
+        return Constants.DRAINING_STATUS;
+    } else {
+        return Constants.STATIC_STATUS;
+    }
+}
 
 function initProps(obj, opts) {
     obj.props = opts;
     const placeholder = Constants.DEVICE_ID_PLACEHOLDER;
     obj.props.telemetryTopic = opts.telemetryTopic || Constants.TELEMETRY_TOPIC_TEMPLATE.replace(placeholder, obj.props.thingName);
-    obj.props.cmdsTopic = opts.cmdsTopic || Constants.CMD_TOPIC_TEMPLATE.replace(placeholder, obj.props.thingName);;
-    obj.props.cmdAckTopic = `${obj.props.cmdsTopic}/${Constants.ACK_SUFFIX}`;
     obj.props.certsProps = null;
+    
+    let initialTankLevel = opts.initialTankLevel;
+    if (initialTankLevel === undefined) initialTankLevel = DEFAULT_INITIAL_TANK_LEVEL;
+    
+    let targetTankLevel = opts.targetTankLevel;
+    if (targetTankLevel === undefined) targetTankLevel = DEFAULT_TARGET_TANK_LEVEL;
+
     obj.props.telemetry = {
-        status: opts.status || DEFAULT_STATUS,
-        tankLevel: opts.tankLevel || DEFAULT_TANK_LEVEL,        
-        version: opts.version || DEFAULT_VERSION,
-        startDrainRequested: false,
-        standByRequested: false,
-        autoCirculateEnabled: true
+        initialTankLevel: initialTankLevel,
+        targetTankLevel: targetTankLevel,
+        period: opts.period || DEFAULT_PERIOD,
+        status: getStatus(initialTankLevel, targetTankLevel),
+        tankLevel: initialTankLevel
     };
     obj.props.shadow = {
         telemetryPerMinRate: 4,
-        minTankLevelThreshold: 15,
-        maxTankLevelTjreshold: 85
+        maxTankLevelThreshold: 85
     }
     obj.props.logger = TankLogger.getLogger(obj.props.thingName);
 }

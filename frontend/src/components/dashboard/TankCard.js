@@ -9,13 +9,11 @@ class TankCard extends React.Component {
     state = { 
         shadow: {
             telemetryRate: '?',
-            minThreshold: '?',
             maxThreshold: '?',
         },
         tankLevel: 50,
         color: '#0000FF',
         telemetry: [],
-        minColor: 'blue',
         maxColor: 'blue',
         historicalData: {
             tankLevel: [],
@@ -34,7 +32,6 @@ class TankCard extends React.Component {
             telemetry: arr, 
             tankLevel: latestTankLevel,
             color: this.getColor(latestTankLevel),
-            minColor: this.getMinThresholdColor(latestTankLevel),
             maxColor: this.getMaxThresholdColor(latestTankLevel)
         });
     }
@@ -47,8 +44,7 @@ class TankCard extends React.Component {
     onShadowUpdate(data) {
         var shadow = {
             telemetryRate: data.payload.data.telemetryPerMinRate,
-            minThreshold: data.payload.data.minTankLevelThreshold,
-            maxThreshold: data.payload.data.maxTankLevelTjreshold,
+            maxThreshold: data.payload.data.maxTankLevelThreshold,
         }
         this.setState({
             shadow: shadow,
@@ -71,16 +67,10 @@ class TankCard extends React.Component {
     }
 
     getColor(value) {
-        var min = this.state.shadow.minThreshold
+        var min = 0;
         var max = this.state.shadow.maxThreshold;
 
         return (value > max || value < min) ? '#FF0000' : '#0000FF';
-    }
-
-    getMinThresholdColor(value) {
-        var min = this.state.shadow.minThreshold;
-
-        return (value < min) ? 'red' : 'blue';
     }
 
     getMaxThresholdColor(value) {
@@ -96,7 +86,6 @@ class TankCard extends React.Component {
                 <TankLevelGauge 
                     tankName={this.props.tankName}
                     value={this.state.tankLevel}
-                    min={this.state.shadow.minThreshold}
                     max={this.state.shadow.maxThreshold} 
                     color={this.state.color} 
                 />
@@ -141,22 +130,11 @@ class TankCard extends React.Component {
                             <List.Item>
                                 <List.Content>
                                     <Popup
-                                        header='maxTankLevelTjreshold'
+                                        header='maxTankLevelThreshold'
                                         trigger={<Icon circular name='thermometer full' inverted color={this.state.maxColor} />}
                                         content='Max tank level threshold (%).'
                                         size='mini'
                                     /> {this.state.shadow.maxThreshold}%
-                                </List.Content>
-                            </List.Item>
-                            <List.Item>
-                                <List.Content>
-
-                                    <Popup
-                                        header='minTankLevelThreshold'
-                                        trigger={<Icon circular name='thermometer empty' inverted color={this.state.minColor}  />}
-                                        content='Min tank level threshold (%).'
-                                        size='mini'
-                                    /> {this.state.shadow.minThreshold}%
                                 </List.Content>
                             </List.Item>
                         </List>
