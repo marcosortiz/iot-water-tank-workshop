@@ -27,7 +27,7 @@ Follow these steps to access the web application:
 TODO: Marcos will add documentation.
 
 ### 4 - Water Tank Edge Device Access
-TODO: Marcos will add documentation. Do we even need this?
+TODO: Jon will add documentation. Do we even need this?
 
 ---
 [Next: Lab 1 - Connecting to AWS IoT Core](1-connecting-wt-iot-core.md)

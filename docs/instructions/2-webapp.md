@@ -39,7 +39,8 @@ The telemetry payload sent by each tank is basically a json document, with a tel
 
 <details>
   <summary>Click here to view a sample telemetry payload.</summary>
-   ```json
+
+  ```json
       {
         "telemetry": [
           {
@@ -100,9 +101,9 @@ The telemetry payload sent by each tank is basically a json document, with a tel
           }
         ]
       }
-   ```
-</details>
+  ```
 
+</details>
 
 ## Monitoring Thing's Shadow
 The way the water tank logic was implemented, was to report its shadow state once it starts running and that is it. Those values don't change after that.
