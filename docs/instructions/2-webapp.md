@@ -140,6 +140,6 @@ The picture below illustrates the overall user experience for the web applicatio
 ![](../imgs/lab2/fig6.gif)
 
 ---
-[Previous: Lab 1 - Connecting to AWS IoT Core](1-connecting-wt-iot-core.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Next: Lab 3 - Creating AWS IoT Rules](3-iot-rules.md)
+[<- Lab 1 - Connecting to AWS IoT Core](1-connecting-wt-iot-core.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-> Lab 3 - Creating AWS IoT Rules](3-iot-rules.md)
 
 

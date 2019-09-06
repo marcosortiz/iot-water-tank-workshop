@@ -2,4 +2,4 @@
 TODO: Jon will add documentation.
 
 ---
-[Previous: Getting Started](0-getting-started.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[Next: Lab 2 - Using The Web Application](2-webapp.md)
+[<- Prerequisites](0-prereqs.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-> Lab 2 - Using The Web Application](2-webapp.md)

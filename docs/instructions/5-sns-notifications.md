@@ -2,4 +2,4 @@
 TODO: Marcos will add documentation.
 
 ---
-[Previous: Lab 4 - Setting up AWS IoT Events](4-iot-events.md)
+[<- Lab 4 - Setting up AWS IoT Events](4-iot-events.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-> Appendix](../appendix/appendix.md)
