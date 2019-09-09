@@ -17,7 +17,7 @@ module.exports = {
                         FunctionArn: `${event.createLambdaFunction.FunctionArn}:1`, // use first published version
                         FunctionConfiguration: {
                             Executable: 'greengrassHelloWorld.function_handler',
-                            MemorySize: 128,
+                            MemorySize: 128000,
                             Timeout: 15
                         }
                     }
