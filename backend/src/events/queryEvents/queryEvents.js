@@ -6,7 +6,7 @@ var DynamoDB = require('aws-sdk/clients/dynamodb');
 AWS.config.region = process.env.AWS_REGION;
 var ddb = new DynamoDB();
 
-const MAX_ITEMS = 15;
+const MAX_ITEMS = 10;
 
 module.exports =  {
     queryEvents: function (event, context, cb) {

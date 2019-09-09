@@ -4,8 +4,6 @@ var fs   = require('fs');
 var path = require('path');
 var iot      = require('aws-iot-device-sdk');
 var Constants = require(`${__dirname}/constants`);
-var MessageHandler = require(`${__dirname}/msgHandler`);
-
 
 const VERISIGN_ROOT_CA_FILENAME = 'verisign-root-ca.pem'
 const CA_CERT = fs.readFileSync(
@@ -30,7 +28,6 @@ module.exports =  {
             bot.props.logger.info('aws-iot-event connect');
             bot.props.logger.info(`Registering for shadow events for to ${bot.props.thingName}`);
             thingShadow.register(bot.props.thingName, {}, function(){
-                thingShadow.subscribe(bot.props.cmdsTopic);
                 var state = {
                     state: {
                         reported: caller.props.shadow
@@ -40,12 +37,6 @@ module.exports =  {
                 thingShadow.update(bot.props.thingName, state );
             });
             
-            bot.props.logger.info(`Subscribing to ${bot.props.cmdsTopic}`);
-            thingShadow.subscribe(bot.props.cmdsTopic);
-            thingShadow.on('message', function(t, payload) {
-                const resp = MessageHandler.handle(payload.toString(), bot);
-                thingShadow.publish(bot.props.cmdAckTopic, resp);
-            });
         });
 
         thingShadow.on('reconnect', function() {

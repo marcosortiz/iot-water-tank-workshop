@@ -8,12 +8,19 @@ if (process.argv.length > 2) {
     thingName = process.argv[2];
 } 
 
-var version = DEFAULT_VERSION;
-if (process.argv.length > 3) {
-    version = process.argv[3];
-}
+let initialTankLevel = parseInt(process.argv[3]);
+if ( initialTankLevel === undefined || Number.isNaN(initialTankLevel) ) initialTankLevel = 50;
+let targetTankLevel = parseInt(process.argv[4]);
+if ( targetTankLevel === undefined || Number.isNaN(targetTankLevel) ) targetTankLevel = 80;
+let period = parseInt(process.argv[5]);
+if (period === undefined || Number.isNaN(period) ) period = 300;
 
-params = {thingName: thingName, version: version, 
-    tankLevel: parseInt((Math.random() * 100).toFixed(2))
+params = {
+    thingName: thingName,
+    initialTankLevel: initialTankLevel,
+    targetTankLevel: targetTankLevel,
+    period: period,
+    tankLevel: initialTankLevel
 };
+
 var tank = new Tank(params);
