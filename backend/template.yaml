@@ -549,7 +549,7 @@ Resources:
               RepublishForIotEvents:              
                   Type: IoTRule
                   Properties:
-                    Sql: "SELECT * from 'tanks/tankLevelEvent'"
+                    Sql: "SELECT * from 'tanks/+/tankLevelEvent'"
             Policies:
                 - AWSLambdaExecute # Managed Policy
                 - Version: '2012-10-17' # Policy Document
@@ -1017,6 +1017,26 @@ Resources:
                         - iotevents:UpdateInputRouting
                         - iam:PassRole
                       Resource: '*'
+    Publish:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/events/publish
+            Handler: publish.publish
+            Runtime: nodejs8.10
+            Timeout: 15
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:Publish
+                      Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/*/tankLevelEvent"
+                    - Effect: Allow
+                      Action:
+                        - iot:DescribeEndpoint
+                      Resource: '*'
+
 
     # Step Functions
     ProvisionThing:
@@ -1541,8 +1561,8 @@ Resources:
                                     Condition: $variable.backToNormal == true
                                     Actions:
                                         - 
-                                            IotTopicPublish:
-                                                MqttTopic: tanks/tankLevelEvent
+                                            Lambda:
+                                                FunctionArn: !GetAtt Publish.Arn
                         OnInput:
                             Events:
                                 -
@@ -1603,8 +1623,8 @@ Resources:
                                     Condition: true
                                     Actions:
                                         - 
-                                            IotTopicPublish:
-                                                MqttTopic: tanks/tankLevelEvent
+                                            Lambda:
+                                                FunctionArn: !GetAtt Publish.Arn
                     -
                         StateName: initializing
                         OnInput:
