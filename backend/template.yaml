@@ -477,14 +477,14 @@ Resources:
                       Action:
                         - dynamodb:Scan
                       Resource: !GetAtt ThingsTable.Arn
-    RepublishTelemetry:
+    Republish:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src/events/republish
             Handler: republishTelemetry.republishTelemetry
             Runtime: nodejs8.10
             Events:
-              RepublishForIotEvents:              
+              TankTelemetry:              
                   Type: IoTRule
                   Properties:
                     Sql: "SELECT topic(2) as tankId, telemetry FROM 'tanks/+/telemetry'"
@@ -504,7 +504,7 @@ Resources:
             Handler: batchPutMessage.batchPutMessage
             Runtime: nodejs8.10
             Events:
-              RepublishForIotEvents:              
+              RepublishedTelemetry:
                   Type: IoTRule
                   Properties:
                     Sql: "SELECT * FROM 'tanks/+/checkThresholds'"
@@ -523,7 +523,7 @@ Resources:
             Handler: putMetricData.putMetricData
             Runtime: nodejs8.10
             Events:
-              RepublishForIotEvents:              
+              TankTelemetry:              
                   Type: IoTRule
                   Properties:
                     Sql: "SELECT topic(2) as dimension, telemetry from 'tanks/+/telemetry'"
@@ -992,6 +992,32 @@ Resources:
                       Action:
                         - dynamodb:Query
                       Resource: !GetAtt TankLevelEventsTable.Arn
+    createDetectorModel:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/workshop/events/createDetectorModel
+            Handler: createDetectorModel.createDetectorModel
+            Runtime: nodejs8.10
+            Timeout: 15
+            Environment:
+                Variables:
+                    DETECTOR_MODEL_NAME: !Ref TankLevelDetectorModel
+                    ROLE_ARN: !GetAtt IoTEventsRole.Arn
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iotevents:DescribeDetectorModel
+                      Resource: !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:detectorModel/${TankLevelDetectorModel}'
+                    - Effect: Allow
+                      Action:
+                        - iotevents:CreateDetectorModel
+                        - iotevents:UpdateInputRouting
+                        - iam:PassRole
+                      Resource: '*'
+
     # Step Functions
     ProvisionThing:
         Type: AWS::StepFunctions::StateMachine
