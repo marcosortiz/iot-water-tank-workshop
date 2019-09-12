@@ -2,5 +2,6 @@
     "region": "us-east-1",
     "samS3BucketName": "<S3_BUCKET_TO_USE_WITH_AWS_SAM>",
     "cloudformationStackName": "iot-water-tank-workshop",
-    "username": "<YOUR_EMAIL_ADDRESS_HERE>"
+    "username": "<YOUR_EMAIL_ADDRESS_HERE>",
+    "workshopMode": "OFF"
 }
