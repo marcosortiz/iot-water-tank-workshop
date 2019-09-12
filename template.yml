@@ -12,6 +12,13 @@ Parameters:
       Type: String
       AllowedPattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"        
       Description: A valid email address is required
+  WorkshopMode:
+      Type: String
+      Default: 'OFF'
+      AllowedValues:
+        - 'OFF'
+        - 'ON'
+      Description: "Enter ON or OFF."
 
 Resources:
   AmplifyRole:
@@ -43,6 +50,9 @@ Resources:
         -
           Name: STACK_NAME
           Value: !Sub '${AWS::StackName}-backend'
+        -
+          Name: WORKSHOP_MODE
+          Value: !Sub '${WorkshopMode}'
       Tags:
         - 
           Key: Name

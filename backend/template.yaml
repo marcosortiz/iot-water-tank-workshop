@@ -6,6 +6,13 @@ Parameters:
         Type: String
         AllowedPattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"        
         Description: A valid email address is required
+    WorkshopMode:
+        Type: String
+        Default: 'OFF'
+        AllowedValues:
+            - 'OFF'
+            - 'ON'
+        Description: "Enter ON or OFF."
 
 Resources: 
     UserPool:
@@ -503,6 +510,9 @@ Resources:
             CodeUri: ./src/events/batchPutMessage
             Handler: batchPutMessage.batchPutMessage
             Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    WORKSHOP_MODE: !Ref WorkshopMode
             Events:
               RepublishedTelemetry:
                   Type: IoTRule
@@ -515,7 +525,14 @@ Resources:
                     - Effect: Allow
                       Action:
                         - iotevents:BatchPutMessage
-                      Resource: !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/${TankLevelInput}'
+                      Resource:
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/${TankLevelInput}'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank1'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank2'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank3'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank4'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank5'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank6'
     PutMetricData:
         Type: AWS::Serverless::Function
         Properties:
