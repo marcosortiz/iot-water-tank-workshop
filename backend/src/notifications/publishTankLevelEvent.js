@@ -41,7 +41,13 @@ function publish(event) {
     var params = {
         TopicArn: process.env.TOPIC_ARN,
         Subject: subject,
-        Message: message
+        Message: message,
+        MessageAttributes: {
+            'tankId': {
+                DataType: "String",
+                StringValue: event.tankId
+            }
+        }
     };
     sns.publish(params, function(err, data) {
         if (err) console.log(err, err.stack);
