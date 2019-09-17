@@ -9,10 +9,13 @@ var ioteventsdata = new IoTEventsData();
 module.exports =  {
     batchPutMessage: function (event, context, cb) {
         console.log('event:', event);
+        let workshopModeOn = process.env.WORKSHOP_MODE === 'ON';
+        let inputName = workshopModeOn ? event.tankId : 'tankLevel';
+
         var params = {
             messages: [
                 {
-                    inputName: 'tankLevel',
+                    inputName: inputName,
                     messageId: `${new Date().getTime()}`,
                     payload: Buffer.from(JSON.stringify(event))
                 }
