@@ -1009,31 +1009,6 @@ Resources:
                       Action:
                         - dynamodb:Query
                       Resource: !GetAtt TankLevelEventsTable.Arn
-    createDetectorModel:
-        Type: AWS::Serverless::Function
-        Properties:
-            CodeUri: ./src/workshop/events/createDetectorModel
-            Handler: createDetectorModel.createDetectorModel
-            Runtime: nodejs8.10
-            Timeout: 15
-            Environment:
-                Variables:
-                    DETECTOR_MODEL_NAME: !Ref TankLevelDetectorModel
-                    ROLE_ARN: !GetAtt IoTEventsRole.Arn
-            Policies:
-                - AWSLambdaExecute # Managed Policy
-                - Version: '2012-10-17' # Policy Document
-                  Statement:
-                    - Effect: Allow
-                      Action:
-                        - iotevents:DescribeDetectorModel
-                      Resource: !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:detectorModel/${TankLevelDetectorModel}'
-                    - Effect: Allow
-                      Action:
-                        - iotevents:CreateDetectorModel
-                        - iotevents:UpdateInputRouting
-                        - iam:PassRole
-                      Resource: '*'
     Publish:
         Type: AWS::Serverless::Function
         Properties:
@@ -1555,6 +1530,60 @@ Resources:
         Properties:
             InputName: tankLevel
             InputDescription: Tank Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank1Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank1
+            InputDescription: Tank1 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank2Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank2
+            InputDescription: Tank2 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank3Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank3
+            InputDescription: Tank3 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank4Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank4
+            InputDescription: Tank4 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank5Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank5
+            InputDescription: Tank5 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank6Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank6
+            InputDescription: Tank6 Level (%)
             InputDefinition:
                 Attributes:
                     - JsonPath: tankId
