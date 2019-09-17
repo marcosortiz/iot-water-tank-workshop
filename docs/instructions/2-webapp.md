@@ -1,7 +1,7 @@
 # Lab 2 - Using The Web Application
 It is very common on real IoT usecases to have a web and/or mobile application that allow your users to monitor your IoT devices. In this workshop, you will be using the web application to monitor your water tank.
 
-> Note: In fact, if you want, you will be able to see data for any tank being used by other attendees on this builder session. For documentation purpose, we will assume we are monitoring **Tank1**. If you are using another tank, please replace anny occurances of **Tank1** by your tank name. 
+> **Note**: In fact, if you want, you will be able to see data for any tank being used by other attendees on this builder session. For documentation purpose, we will assume we are monitoring **Tank1**. If you are using another tank, please replace any occurances of **Tank1** by your tank name. 
 
 ## Overall Architecture
 The picture bellow, illustrates the overall architecture of how this web application interacts with AWS services.
@@ -140,6 +140,4 @@ The picture below illustrates the overall user experience for the web applicatio
 ![](../imgs/lab2/fig6.gif)
 
 ---
-[<- Lab 1 - Connecting to AWS IoT Core](1-connecting-wt-iot-core.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-> Lab 3 - Creating AWS IoT Rules](3-iot-rules.md)
-
-
+[<- Lab 1 - Connecting to AWS IoT Core](1-connecting-wt-iot-core.md)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-> Lab 3 - AWS IoT Core Data Flow](3-iot-core-data-flow.md)

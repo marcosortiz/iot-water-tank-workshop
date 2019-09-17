@@ -42,7 +42,7 @@ TODO: Jon will add documentation. Do we even need this?
 </details>
 
 ---
-[<- Index](../README.md#Instructions)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-> Lab 1 - Connecting to AWS IoT Core](1-connecting-wt-iot-core.md)
+[<- Index](../../README.md#Instructions)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-> Lab 1 - Connecting to AWS IoT Core](1-connecting-wt-iot-core.md)
 
 
 
