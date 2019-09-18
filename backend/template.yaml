@@ -6,6 +6,13 @@ Parameters:
         Type: String
         AllowedPattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"        
         Description: A valid email address is required
+    WorkshopMode:
+        Type: String
+        Default: 'OFF'
+        AllowedValues:
+            - 'OFF'
+            - 'ON'
+        Description: "Enter ON or OFF."
 
 Resources: 
     UserPool:
@@ -477,14 +484,14 @@ Resources:
                       Action:
                         - dynamodb:Scan
                       Resource: !GetAtt ThingsTable.Arn
-    RepublishTelemetry:
+    Republish:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src/events/republish
             Handler: republishTelemetry.republishTelemetry
             Runtime: nodejs8.10
             Events:
-              RepublishForIotEvents:              
+              TankTelemetry:              
                   Type: IoTRule
                   Properties:
                     Sql: "SELECT topic(2) as tankId, telemetry FROM 'tanks/+/telemetry'"
@@ -503,8 +510,11 @@ Resources:
             CodeUri: ./src/events/batchPutMessage
             Handler: batchPutMessage.batchPutMessage
             Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    WORKSHOP_MODE: !Ref WorkshopMode
             Events:
-              RepublishForIotEvents:              
+              RepublishedTelemetry:
                   Type: IoTRule
                   Properties:
                     Sql: "SELECT * FROM 'tanks/+/checkThresholds'"
@@ -515,7 +525,14 @@ Resources:
                     - Effect: Allow
                       Action:
                         - iotevents:BatchPutMessage
-                      Resource: !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/${TankLevelInput}'
+                      Resource:
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/${TankLevelInput}'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank1'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank2'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank3'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank4'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank5'
+                        - !Sub 'arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/Tank6'
     PutMetricData:
         Type: AWS::Serverless::Function
         Properties:
@@ -523,7 +540,7 @@ Resources:
             Handler: putMetricData.putMetricData
             Runtime: nodejs8.10
             Events:
-              RepublishForIotEvents:              
+              TankTelemetry:              
                   Type: IoTRule
                   Properties:
                     Sql: "SELECT topic(2) as dimension, telemetry from 'tanks/+/telemetry'"
@@ -549,7 +566,7 @@ Resources:
               RepublishForIotEvents:              
                   Type: IoTRule
                   Properties:
-                    Sql: "SELECT * from 'tanks/tankLevelEvent'"
+                    Sql: "SELECT * from 'tanks/+/tankLevelEvent'"
             Policies:
                 - AWSLambdaExecute # Managed Policy
                 - Version: '2012-10-17' # Policy Document
@@ -1033,7 +1050,7 @@ Resources:
             CodeUri: ./src/tanks/provisioning/greengrass/deprovision/
             Handler: detachDeleteGreengrassPolicy.detachDeleteGreengrassPolicy
             Runtime: nodejs8.10
-            Policies:
+                Policies:
                 - AWSLambdaExecute # Managed Policy
                 - Version: '2012-10-17' # Policy Document
                   Statement:
@@ -1041,6 +1058,25 @@ Resources:
                       Action:
                         - iot:DetachPolicy
                         - iot:DeletePolicy
+                      Resource: '*'
+    Publish:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/events/publish
+            Handler: publish.publish
+            Runtime: nodejs8.10
+            Timeout: 15
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:Publish
+                      Resource: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/*/tankLevelEvent"
+                    - Effect: Allow
+                      Action:
+                        - iot:DescribeEndpoint
                       Resource: '*'
     ResetGroupDeployments:
         Type: AWS::Serverless::Function
@@ -1052,6 +1088,7 @@ Resources:
                 - AWSLambdaExecute # Managed Policy
                 - AWSGreengrassResourceAccessRolePolicy
                 - AWSGreengrassFullAccess # Managed Policy
+
     # Step Functions
     ProvisionThing:
         Type: AWS::StepFunctions::StateMachine
@@ -1585,6 +1622,60 @@ Resources:
                 Attributes:
                     - JsonPath: tankId
                     - JsonPath: sensorData.tankLevel
+    Tank1Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank1
+            InputDescription: Tank1 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank2Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank2
+            InputDescription: Tank2 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank3Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank3
+            InputDescription: Tank3 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank4Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank4
+            InputDescription: Tank4 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank5Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank5
+            InputDescription: Tank5 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
+    Tank6Input:
+        Type: AWS::IoTEvents::Input
+        Properties:
+            InputName: Tank6
+            InputDescription: Tank6 Level (%)
+            InputDefinition:
+                Attributes:
+                    - JsonPath: tankId
+                    - JsonPath: sensorData.tankLevel
     TankLevelDetectorModel:
         Type: AWS::IoTEvents::DetectorModel
         Properties:
@@ -1604,8 +1695,8 @@ Resources:
                                     Condition: $variable.backToNormal == true
                                     Actions:
                                         - 
-                                            IotTopicPublish:
-                                                MqttTopic: tanks/tankLevelEvent
+                                            Lambda:
+                                                FunctionArn: !GetAtt Publish.Arn
                         OnInput:
                             Events:
                                 -
@@ -1666,8 +1757,8 @@ Resources:
                                     Condition: true
                                     Actions:
                                         - 
-                                            IotTopicPublish:
-                                                MqttTopic: tanks/tankLevelEvent
+                                            Lambda:
+                                                FunctionArn: !GetAtt Publish.Arn
                     -
                         StateName: initializing
                         OnInput:
