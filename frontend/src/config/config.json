@@ -1,0 +1,9 @@
+{
+    "region": "us-east-1",
+    "IdentityPoolId": "us-east-1:68225bd2-9bee-4968-a529-5bc3da0de228",
+    "UserPoolId": "us-east-1_I7Mpml70J",
+    "userPoolWebClientId": "46e2anuou9e4gj4l81uhe0e14p",
+    "IotWebPolicy": "iot-water-tank-workshop-IotWebPolicy-QQC1SWNDS24I",
+    "ListTanks": "iot-water-tank-workshop-ListTanks-1N2718NWX166L",
+    "iotEndpointAddress": "a2t0hfgmbw4n5w-ats.iot.us-east-1.amazonaws.com"
+}

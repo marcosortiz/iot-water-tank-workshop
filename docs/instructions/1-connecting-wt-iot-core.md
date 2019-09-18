@@ -35,6 +35,14 @@ You should now see messages displayed every 5 seconds, coming from your device. 
 
 ## Edit Lambda Function
 
+After subscribing successfully receiving messages from the *hello/world/Tank{NUMBER}* topic, open a new browser tab, and access the AWS Management Console.
+
+On the AWS Management Console home page, type **lambda** into the **Find Services** search bar.  Click the **Lambda** item (the first query result).
+
+You should now be in the AWS Lambda portal.  Type *Tank{NUMBER}* in the the search bar to filter results, and find your team's Lambda function.  Click the name of the Lambda function to configure it.
+
+You should now see messages displayed every 5 seconds, coming from your device.  This is a simple hello world message - next, you will edit a Lambda function to publish datapoints captured from a liquid tape sensor.
+
 ## Edit Greengrass Function Definition
 
 ## Edit Greengrass Subscription Definition

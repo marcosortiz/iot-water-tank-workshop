@@ -1,0 +1,1694 @@
+AWSTemplateFormatVersion: 2010-09-09
+Outputs:
+  GetMetricData:
+    Description: Lambda function used to get last 15 mins of tank Level metric for
+      a given tank
+    Value:
+      Ref: GetMetricData
+  IdentityPoolId:
+    Description: IdentityPoolId id
+    Value:
+      Ref: IdentityPool
+  IotWebPolicy:
+    Description: The AWS IoT policy that will be used by the frontend
+    Value:
+      Ref: IotWebPolicy
+  ListTanks:
+    Description: Lambda function used to list tanks
+    Value:
+      Ref: ListTanks
+  ProvisionThing:
+    Description: State machine arn for provisioning tanks.
+    Value:
+      Ref: ProvisionThing
+  QueryTankThresholdEvents:
+    Description: Lambda function used to list talk level events
+    Value:
+      Ref: QueryTankThresholdEvents
+  RemoveThing:
+    Description: State machine arn for removing tanks.
+    Value:
+      Ref: RemoveThing
+  TankLevelEventsTable:
+    Description: Dynamo DB table name that holds tank level threshold events
+    Value:
+      Ref: TankLevelEventsTable
+  ThingsTable:
+    Description: Table used to hold iot things metadata
+    Value:
+      Ref: ThingsTable
+  UserPoolId:
+    Description: UserPoolId id
+    Value:
+      Ref: UserPool
+  iotKeysAndCertsBucket:
+    Description: S3 bucket that will store iot keys and certs
+    Value:
+      Ref: iotKeysAndCertsBucket
+  userPoolWebClientId:
+    Description: The user pool web client id
+    Value:
+      Ref: UserPoolClient
+Parameters:
+  Username:
+    AllowedPattern: ^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$
+    Description: A valid email address is required
+    Type: String
+Resources:
+  AddGreengrassConfigFile:
+    Properties:
+      CodeUri: AddGreengrassConfigFile
+      Environment:
+        Variables:
+          S3_BUCKET:
+            Ref: iotKeysAndCertsBucket
+      Handler: addGreengrassConfigFile.addGreengrassConfigFile
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:DescribeEndpoint
+          - s3:GetObject
+          - s3:PutObject
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  AdminGroup:
+    Properties:
+      Description: Administrators
+      GroupName: Admins
+      RoleArn:
+        Fn::GetAtt:
+        - AdminRole
+        - Arn
+      UserPoolId:
+        Ref: UserPool
+    Type: AWS::Cognito::UserPoolGroup
+  AdminRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRoleWithWebIdentity
+          Condition:
+            StringEquals:
+              cognito-identity.amazonaws.com:aud:
+                Ref: IdentityPool
+          Effect: Allow
+          Principal:
+            Federated:
+            - cognito-identity.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:Query
+            Effect: Allow
+            Resource: '*'
+          Version: '2012-10-17'
+        PolicyName:
+          Fn::Sub: ${AWS::StackName}-ddb
+    Type: AWS::IAM::Role
+  AttachCertToThing:
+    Properties:
+      CodeUri: AttachCertToThing
+      Handler: attachCertToThing.attachCertToThing
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:AttachThingPrincipal
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  AttachGreengrassPolicyToCert:
+    Properties:
+      CodeUri: AttachGreengrassPolicyToCert
+      Environment:
+        Variables:
+          ACCOUNT_ID:
+            Ref: AWS::AccountId
+      Handler: attachGreengrassPolicyToCert.attachGreengrassPolicyToCert
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:AttachPolicy
+          - iot:CreatePolicy
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  AttachPolicyToCert:
+    Properties:
+      CodeUri: AttachPolicyToCert
+      Environment:
+        Variables:
+          POLICY_NAME:
+            Ref: IotTankPolicy
+      Handler: attachPolicyToCert.attachPolicyToCert
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:AttachPolicy
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CheckForGreengrass:
+    Properties:
+      CodeUri: CheckForGreengrass
+      Environment:
+        Variables:
+          THINGS_TABLE:
+            Ref: ThingsTable
+      Handler: checkForGreengrass.checkForGreengrass
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - ThingsTable
+            - Arn
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CheckIfThingExists:
+    Properties:
+      CodeUri: CheckIfThingExists
+      Handler: checkIfThingExists.checkIfThingExists
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:DescribeThing
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CheckProvisioning:
+    Properties:
+      CodeUri: CheckProvisioning
+      Environment:
+        Variables:
+          POLICY_NAME:
+            Ref: IotTankPolicy
+          S3_BUCKET:
+            Ref: iotKeysAndCertsBucket
+          THINGS_TABLE:
+            Ref: ThingsTable
+      Handler: checkProvisioning.checkProvisioning
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - dynamodb:PutItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - ThingsTable
+            - Arn
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CheckServiceRole:
+    Properties:
+      CodeUri: CheckServiceRole
+      Handler: checkGreengrassServiceRole.checkGreengrassServiceRole
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:GetServiceRoleForAccount
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CheckThingAttachments:
+    Properties:
+      CodeUri: CheckThingAttachments
+      Handler: checkThingAttachments.checkThingAttachments
+      Policies:
+      - AWSLambdaExecute
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CognitoPrincipalAttachment:
+    Properties:
+      PolicyName:
+        Ref: IotWebPolicy
+      Principal:
+        Ref: IdentityPool
+    Type: AWS::IoT::PolicyPrincipalAttachment
+  CreateGreengrassCoreDefinition:
+    Properties:
+      CodeUri: CreateGreengrassCoreDefinition
+      Handler: createGreengrassCoreDefinition.createGreengrassCoreDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:createCoreDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CreateGreengrassDeviceDefinition:
+    Properties:
+      CodeUri: CreateGreengrassDeviceDefinition
+      Handler: createGreengrassDeviceDefinition.createGreengrassDeviceDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:createDeviceDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CreateGreengrassFunctionDefinition:
+    Properties:
+      CodeUri: CreateGreengrassFunctionDefinition
+      Handler: createGreengrassFunctionDefinition.createGreengrassFunctionDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:createFunctionDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CreateGreengrassGroup:
+    Properties:
+      CodeUri: CreateGreengrassGroup
+      Environment:
+        Variables:
+          THINGS_TABLE:
+            Ref: ThingsTable
+      Handler: createGreengrassGroup.createGreengrassGroup
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:createGroup
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      - Statement:
+        - Action:
+          - dynamodb:UpdateItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - ThingsTable
+            - Arn
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CreateGreengrassGroupVersion:
+    Properties:
+      CodeUri: CreateGreengrassGroupVersion
+      Handler: createGreengrassGroupVersion.createGreengrassGroupVersion
+      Policies:
+      - AWSLambdaExecute
+      - AWSGreengrassResourceAccessRolePolicy
+      - AWSGreengrassFullAccess
+      - Statement:
+        - Action:
+          - greengrass:createGroupVersion
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+      Timeout: 15
+    Type: AWS::Serverless::Function
+  CreateGreengrassLambdaFunction:
+    Properties:
+      CodeUri: CreateGreengrassLambdaFunction
+      Environment:
+        Variables:
+          DELAY: 15000
+      Handler: createGreengrassLambdaFunction.createGreengrassLambdaFunction
+      Policies:
+      - AWSLambdaExecute
+      - AWSGreengrassResourceAccessRolePolicy
+      - AWSGreengrassFullAccess
+      - Statement:
+        - Action:
+          - iam:attachRolePolicy
+          - iam:createRole
+          - lambda:createFunction
+          - iam:PassRole
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+      Timeout: 60
+    Type: AWS::Serverless::Function
+  CreateGreengrassLoggerDefinition:
+    Properties:
+      CodeUri: CreateGreengrassLoggerDefinition
+      Handler: createGreengrassLoggerDefinition.createGreengrassLoggerDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:createLoggerDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CreateGreengrassResourceDefinition:
+    Properties:
+      CodeUri: CreateGreengrassResourceDefinition
+      Handler: createGreengrassResourceDefinition.createGreengrassResourceDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:createResourceDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CreateGreengrassSubscriptionDefinition:
+    Properties:
+      CodeUri: CreateGreengrassSubscriptionDefinition
+      Handler: createGreengrassSubscriptionDefinition.createGreengrassSubscriptionDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:createSubscriptionDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CreateKeysAndCert:
+    Properties:
+      CodeUri: CreateKeysAndCert
+      Environment:
+        Variables:
+          S3_BUCKET:
+            Ref: iotKeysAndCertsBucket
+      Handler: createKeysAndCert.createKeysAndCert
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:CreateKeysAndCertificate
+          Effect: Allow
+          Resource: '*'
+        - Action:
+          - s3:PutObject
+          Effect: Allow
+          Resource:
+            Fn::Sub: arn:aws:s3:::${iotKeysAndCertsBucket}/*
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CreateServiceRole:
+    Properties:
+      CodeUri: CreateServiceRole
+      Handler: addGreengrassServiceRole.addGreengrassServiceRole
+      Policies:
+      - AWSLambdaExecute
+      - AWSGreengrassResourceAccessRolePolicy
+      - Statement:
+        - Action:
+          - iam:AttachRolePolicy
+          - iam:CreateRole
+          - iam:PassRole
+          - greengrass:associateServiceRoleToAccount
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  CreateThing:
+    Properties:
+      CodeUri: CreateThing
+      Handler: createThing.createThing
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:CreateThing
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteCert:
+    Properties:
+      CodeUri: DeleteCert
+      Environment:
+        Variables:
+          S3_BUCKET:
+            Ref: iotKeysAndCertsBucket
+      Handler: deleteCert.deleteCert
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:DeleteCertificate
+          Effect: Allow
+          Resource: '*'
+        - Action:
+          - s3:DeleteObject
+          Effect: Allow
+          Resource:
+            Fn::Sub: arn:aws:s3:::${iotKeysAndCertsBucket}/*
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteGreengrassCoreDefinition:
+    Properties:
+      CodeUri: DeleteGreengrassCoreDefinition
+      Handler: deleteGreengrassCoreDefinition.deleteGreengrassCoreDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:DeleteCoreDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteGreengrassDeviceDefinition:
+    Properties:
+      CodeUri: DeleteGreengrassDeviceDefinition
+      Handler: deleteGreengrassDeviceDefinition.deleteGreengrassDeviceDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:DeleteDeviceDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteGreengrassFunctionDefinition:
+    Properties:
+      CodeUri: DeleteGreengrassFunctionDefinition
+      Handler: deleteGreengrassFunctionDefinition.deleteGreengrassFunctionDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:DeleteFunctionDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteGreengrassGroup:
+    Properties:
+      CodeUri: DeleteGreengrassGroup
+      Handler: deleteGreengrassGroup.deleteGreengrassGroup
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:DeleteGroup
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteGreengrassLambdaFunction:
+    Properties:
+      CodeUri: DeleteGreengrassLambdaFunction
+      Handler: deleteGreengrassLambdaFunction.deleteGreengrassLambdaFunction
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - lambda:DeleteFunction
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteGreengrassLoggerDefinition:
+    Properties:
+      CodeUri: DeleteGreengrassLoggerDefinition
+      Handler: deleteGreengrassLoggerDefinition.deleteGreengrassLoggerDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:DeleteLoggerDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteGreengrassResourceDefinition:
+    Properties:
+      CodeUri: DeleteGreengrassResourceDefinition
+      Handler: deleteGreengrassResourceDefinition.deleteGreengrassResourceDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:DeleteResourceDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteGreengrassSubscriptionDefinition:
+    Properties:
+      CodeUri: DeleteGreengrassSubscriptionDefinition
+      Handler: deleteGreengrassSubscriptionDefinition.deleteGreengrassSubscriptionDefinition
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - greengrass:DeleteSubscriptionDefinition
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteMetadata:
+    Properties:
+      CodeUri: DeleteMetadata
+      Environment:
+        Variables:
+          THINGS_TABLE:
+            Ref: ThingsTable
+      Handler: deleteMetadata.deleteMetadata
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - dynamodb:DeleteItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - ThingsTable
+            - Arn
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DeleteThing:
+    Properties:
+      CodeUri: DeleteThing
+      Handler: deleteThing.deleteThing
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:DeleteThing
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DetachCertFromThing:
+    Properties:
+      CodeUri: DetachCertFromThing
+      Handler: detachCertFromThing.detachCertFromThing
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:DetachThingPrincipal
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DetachDeleteGreengrassPolicy:
+    Properties:
+      CodeUri: DetachDeleteGreengrassPolicy
+      Handler: detachDeleteGreengrassPolicy.detachDeleteGreengrassPolicy
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:DetachPolicy
+          - iot:DeletePolicy
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DetachPolicyFromCert:
+    Properties:
+      CodeUri: DetachPolicyFromCert
+      Environment:
+        Variables:
+          POLICY_NAME:
+            Ref: IotTankPolicy
+      Handler: detachPolicyFromCert.detachPolicyFromCert
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:DetachPolicy
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  DisableCert:
+    Properties:
+      CodeUri: DisableCert
+      Environment:
+        Variables:
+          THINGS_TABLE:
+            Ref: ThingsTable
+      Handler: disableCert.disableCert
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - ThingsTable
+            - Arn
+        - Action:
+          - iot:UpdateCertificate
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  GetGreengrassGroup:
+    Properties:
+      CodeUri: GetGreengrassGroup
+      Environment:
+        Variables:
+          THINGS_TABLE:
+            Ref: ThingsTable
+      Handler: getGreengrassGroup.getGreengrassGroup
+      Policies:
+      - AWSLambdaExecute
+      - AWSGreengrassResourceAccessRolePolicy
+      - AWSGreengrassFullAccess
+      - Statement:
+        - Action:
+          - dynamodb:GetItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - ThingsTable
+            - Arn
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  GetMetricData:
+    Properties:
+      CodeUri: GetMetricData
+      Handler: getMetricData.getMetricData
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - cloudwatch:GetMetricData
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  IdentityPool:
+    Properties:
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+      - ClientId:
+          Ref: UserPoolClient
+        ProviderName:
+          Fn::GetAtt:
+          - UserPool
+          - ProviderName
+    Type: AWS::Cognito::IdentityPool
+  IdentityPoolAuthRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRoleWithWebIdentity
+          Condition:
+            ForAnyValue:StringLike:
+              cognito-identity.amazonaws.com:amr: authenticated
+            StringEquals:
+              cognito-identity.amazonaws.com:aud:
+                Ref: IdentityPool
+          Effect: Allow
+          Principal:
+            Federated:
+            - cognito-identity.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AWSIoTDataAccess
+      - arn:aws:iam::aws:policy/AWSIoTConfigAccess
+      Path: /
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - mobileanalytics:PutEvents
+            - cognito-sync:*
+            - cognito-identity:*
+            Effect: Allow
+            Resource: '*'
+          Version: '2012-10-17'
+        PolicyName:
+          Fn::Sub: ${AWS::StackName}-sts
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - lambda:InvokeFunction
+            Effect: Allow
+            Resource:
+            - Fn::GetAtt:
+              - GetMetricData
+              - Arn
+            - Fn::GetAtt:
+              - ListTanks
+              - Arn
+            - Fn::GetAtt:
+              - QueryTankThresholdEvents
+              - Arn
+          Version: '2012-10-17'
+        PolicyName:
+          Fn::Sub: ${AWS::StackName}-lambda
+    Type: AWS::IAM::Role
+  IdentityPoolRoleAttachment:
+    Properties:
+      IdentityPoolId:
+        Ref: IdentityPool
+      Roles:
+        authenticated:
+          Fn::GetAtt:
+          - IdentityPoolAuthRole
+          - Arn
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+  IoTEventsRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - iotevents.amazonaws.com
+        Version: '2012-10-17'
+      Path: /service-role/
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - iot:Publish
+            Effect: Allow
+            Resource:
+            - Fn::Sub: arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/*
+          - Action:
+            - sns:Publish
+            Effect: Allow
+            Resource:
+            - Fn::Sub: arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*
+          - Action:
+            - sqs:SendMessage
+            Effect: Allow
+            Resource:
+            - Fn::Sub: arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:*
+          - Action:
+            - lambda:InvokeFunction
+            Effect: Allow
+            Resource:
+            - Fn::Sub: arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:*
+          - Action:
+            - firehose:PutRecord
+            - firehose:PutRecordBatch
+            Effect: Allow
+            Resource:
+            - Fn::Sub: arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/*
+          - Action:
+            - iotevents:BatchPutMessage
+            Effect: Allow
+            Resource:
+            - Fn::Sub: arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/*
+          Version: '2012-10-17'
+        PolicyName:
+          Fn::Sub: ${AWS::StackName}-iotevents
+    Type: AWS::IAM::Role
+  IoTRepublishRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - iot.amazonaws.com
+        Version: '2012-10-17'
+      Path: /service-role/
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - iot:Publish
+            Effect: Allow
+            Resource:
+            - Fn::Sub: arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/*
+          Version: '2012-10-17'
+        PolicyName:
+          Fn::Sub: ${AWS::StackName}-iotrepublish
+    Type: AWS::IAM::Role
+  IotTankPolicy:
+    Properties:
+      PolicyDocument:
+        Fn::Sub: "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n    \
+          \    {\n            \"Effect\": \"Allow\",\n            \"Action\":[\"iot:Connect\"\
+          ],\n            \"Resource\": [\"*\"]\n        },{\n            \"Effect\"\
+          : \"Allow\",\n            \"Action\":[\n                \"iot:Publish\"\n\
+          \            ],\n            \"Resource\": [\n                \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/telemetry\"\
+          ,\n                \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/cmds/ack\"\
+          ,\n                \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${!iot:ClientId}/shadow/update\"\
+          \n            ]\n        },{\n            \"Effect\": \"Allow\",\n     \
+          \       \"Action\":[\n                \"iot:Subscribe\"\n            ],\n\
+          \            \"Resource\": [\n                \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/tanks/${!iot:ClientId}/cmds\"\
+          ,\n                \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${!iot:ClientId}/*\"\
+          \n            ]\n        },{\n            \"Effect\": \"Allow\",\n     \
+          \       \"Action\":[\n                \"iot:Receive\"\n            ],\n\
+          \            \"Resource\": [\n                \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/${!iot:ClientId}/cmds\"\
+          ,\n                \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${!iot:ClientId}/*\"\
+          \n            ]\n        }\n    ]\n}\n"
+    Type: AWS::IoT::Policy
+  IotWebPolicy:
+    Properties:
+      PolicyDocument:
+        Fn::Sub: "{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [{\n   \
+          \     \"Effect\": \"Allow\",\n        \"Action\":[\"iot:Connect\"],\n  \
+          \      \"Resource\": [\"*\"]\n    },{\n        \"Effect\": \"Allow\",\n\
+          \        \"Action\":[\n            \"iot:Publish\"\n        ],\n       \
+          \ \"Resource\": [\n            \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/*\"\
+          ,\n            \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/*/shadow/get\"\
+          \n        ]\n    },{\n        \"Effect\": \"Allow\",\n        \"Action\"\
+          :[\n            \"iot:Subscribe\"\n        ],\n        \"Resource\": [\n\
+          \            \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/tanks/*\"\
+          ,\n            \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/*/shadow/update/accepted\"\
+          ,\n            \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/*/shadow/get/accepted\"\
+          \n        ]\n    },{\n        \"Effect\": \"Allow\",\n        \"Action\"\
+          :[\n            \"iot:Receive\"\n        ],\n        \"Resource\": [\n \
+          \           \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/tanks/*\"\
+          ,\n            \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/*/shadow/update/accepted\"\
+          ,\n            \"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/*/shadow/get/accepted\"\
+          \n        ]\n    }]\n}\n"
+    Type: AWS::IoT::Policy
+  ListTanks:
+    Properties:
+      CodeUri: ListTanks
+      Environment:
+        Variables:
+          THINGS_TABLE:
+            Ref: ThingsTable
+      Handler: listTanks.listTanks
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - dynamodb:Scan
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - ThingsTable
+            - Arn
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  ProvisionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - states.amazonaws.com
+        Version: '2012-10-17'
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - lambda:InvokeFunction
+            Effect: Allow
+            Resource:
+            - Fn::GetAtt:
+              - AttachCertToThing
+              - Arn
+            - Fn::GetAtt:
+              - AttachPolicyToCert
+              - Arn
+            - Fn::GetAtt:
+              - CheckIfThingExists
+              - Arn
+            - Fn::GetAtt:
+              - CheckProvisioning
+              - Arn
+            - Fn::GetAtt:
+              - CheckThingAttachments
+              - Arn
+            - Fn::GetAtt:
+              - CreateKeysAndCert
+              - Arn
+            - Fn::GetAtt:
+              - CreateThing
+              - Arn
+            - Fn::GetAtt:
+              - DeleteCert
+              - Arn
+            - Fn::GetAtt:
+              - DeleteMetadata
+              - Arn
+            - Fn::GetAtt:
+              - DeleteThing
+              - Arn
+            - Fn::GetAtt:
+              - DetachCertFromThing
+              - Arn
+            - Fn::GetAtt:
+              - DetachPolicyFromCert
+              - Arn
+            - Fn::GetAtt:
+              - DisableCert
+              - Arn
+            - Fn::GetAtt:
+              - AddGreengrassConfigFile
+              - Arn
+            - Fn::GetAtt:
+              - AttachGreengrassPolicyToCert
+              - Arn
+            - Fn::GetAtt:
+              - CheckServiceRole
+              - Arn
+            - Fn::GetAtt:
+              - CreateServiceRole
+              - Arn
+            - Fn::GetAtt:
+              - CreateGreengrassGroup
+              - Arn
+            - Fn::GetAtt:
+              - CreateGreengrassCoreDefinition
+              - Arn
+            - Fn::GetAtt:
+              - CreateGreengrassDeviceDefinition
+              - Arn
+            - Fn::GetAtt:
+              - CreateGreengrassLoggerDefinition
+              - Arn
+            - Fn::GetAtt:
+              - CreateGreengrassFunctionDefinition
+              - Arn
+            - Fn::GetAtt:
+              - CreateGreengrassResourceDefinition
+              - Arn
+            - Fn::GetAtt:
+              - CreateGreengrassSubscriptionDefinition
+              - Arn
+            - Fn::GetAtt:
+              - CreateGreengrassLambdaFunction
+              - Arn
+            - Fn::GetAtt:
+              - CreateGreengrassGroupVersion
+              - Arn
+            - Fn::GetAtt:
+              - CheckForGreengrass
+              - Arn
+            - Fn::GetAtt:
+              - DeleteGreengrassCoreDefinition
+              - Arn
+            - Fn::GetAtt:
+              - DeleteGreengrassDeviceDefinition
+              - Arn
+            - Fn::GetAtt:
+              - DeleteGreengrassFunctionDefinition
+              - Arn
+            - Fn::GetAtt:
+              - DeleteGreengrassGroup
+              - Arn
+            - Fn::GetAtt:
+              - DeleteGreengrassLambdaFunction
+              - Arn
+            - Fn::GetAtt:
+              - DeleteGreengrassLoggerDefinition
+              - Arn
+            - Fn::GetAtt:
+              - DeleteGreengrassResourceDefinition
+              - Arn
+            - Fn::GetAtt:
+              - DeleteGreengrassSubscriptionDefinition
+              - Arn
+            - Fn::GetAtt:
+              - DetachDeleteGreengrassPolicy
+              - Arn
+            - Fn::GetAtt:
+              - GetGreengrassGroup
+              - Arn
+            - Fn::GetAtt:
+              - ResetGroupDeployments
+              - Arn
+          Version: '2012-10-17'
+        PolicyName:
+          Fn::Sub: ${AWS::StackName}-lambda
+    Type: AWS::IAM::Role
+  ProvisionThing:
+    Properties:
+      DefinitionString:
+        Fn::Sub: "{\n    \"Comment\": \"If a thing with the same name does not exists,\
+          \ create it and attach a new cert and policy to it.\",\n    \"StartAt\"\
+          : \"fetchThing\",\n    \"States\": {\n        \"fetchThing\": {\n      \
+          \      \"Type\": \"Task\",\n            \"Resource\": \"${CheckIfThingExists.Arn}\"\
+          ,\n            \"Next\": \"doesThingExists\"\n        },\n        \"doesThingExists\"\
+          : {\n            \"Type\": \"Choice\",\n            \"Choices\": [\n   \
+          \             {\n                    \"Variable\": \"$.exists\",\n     \
+          \               \"BooleanEquals\": true,\n                    \"Next\":\
+          \ \"thingAlreadyExistsFail\"\n                },\n                {\n  \
+          \                  \"Variable\": \"$.exists\",\n                    \"BooleanEquals\"\
+          : false,\n                    \"Next\": \"provisionThing\"\n           \
+          \     }\n            ]\n        },\n        \"thingAlreadyExistsFail\":\
+          \ {\n            \"Type\": \"Fail\",\n            \"Error\": \"Thing already\
+          \ exists.\"\n        },\n        \"provisionThing\": {\n            \"Type\"\
+          : \"Parallel\",\n            \"Next\": \"checkProvisioning\",\n        \
+          \    \"ResultPath\": \"$.provisionThing\",\n            \"Branches\": [\n\
+          \                {\n                    \"StartAt\": \"createThing\",\n\
+          \                    \"States\": {\n                        \"createThing\"\
+          : {\n                            \"Type\": \"Task\",\n                 \
+          \           \"Resource\": \"${CreateThing.Arn}\",\n                    \
+          \        \"End\": true\n                        }\n                    }\n\
+          \                },\n                {\n                    \"StartAt\"\
+          : \"createKeysAndCerts\",\n                    \"States\": {\n         \
+          \               \"createKeysAndCerts\": {\n                            \"\
+          Type\": \"Task\",\n                            \"Resource\": \"${CreateKeysAndCert.Arn}\"\
+          ,\n                            \"End\": true\n                        }\n\
+          \                    }\n                }\n            ]\n        },\n \
+          \       \"checkProvisioning\": {\n            \"Type\": \"Task\",\n    \
+          \        \"Resource\": \"${CheckProvisioning.Arn}\",\n            \"Next\"\
+          : \"attachResources\"\n        },\n        \"attachResources\": {\n    \
+          \        \"Type\": \"Parallel\",\n            \"Next\": \"checkAttachments\"\
+          ,\n            \"ResultPath\": \"$.attachResources\",\n            \"Branches\"\
+          : [\n                {\n                    \"StartAt\": \"attachPolicyToCert\"\
+          ,\n                    \"States\": {\n                        \"attachPolicyToCert\"\
+          : {\n                            \"Type\": \"Task\",\n                 \
+          \           \"Resource\": \"${AttachPolicyToCert.Arn}\",\n             \
+          \               \"End\": true\n                        }\n             \
+          \       }\n                },\n                {\n                    \"\
+          StartAt\": \"attachCertToThing\",\n                    \"States\": {\n \
+          \                       \"attachCertToThing\": {\n                     \
+          \       \"Type\": \"Task\",\n                            \"Resource\": \"\
+          ${AttachCertToThing.Arn}\",\n                            \"End\": true\n\
+          \                        }\n                    }\n                }\n \
+          \           ]\n        },\n        \"checkAttachments\": {\n           \
+          \ \"Type\": \"Task\",\n            \"Resource\": \"${CheckThingAttachments.Arn}\"\
+          ,\n            \"Next\": \"includeGreengrass\"\n        },\n        \"includeGreengrass\"\
+          : {\n            \"Type\": \"Choice\",\n            \"Choices\": [\n   \
+          \             {\n                    \"Variable\": \"$.includeGreengrass\"\
+          ,\n                    \"BooleanEquals\": true,\n                    \"\
+          Next\": \"checkServiceRole\"\n                },\n                {\n  \
+          \                  \"Variable\": \"$.includeGreengrass\",\n            \
+          \        \"BooleanEquals\": false,\n                    \"Next\": \"finished\"\
+          \n                }\n            ]\n        },\n        \"checkServiceRole\"\
+          : {\n            \"Type\": \"Task\",\n            \"Resource\": \"${CheckServiceRole.Arn}\"\
+          ,\n            \"Next\": \"serviceRoleMissing\",\n            \"ResultPath\"\
+          : \"$.checkServiceRole\"\n        },\n        \"serviceRoleMissing\": {\n\
+          \            \"Type\": \"Choice\",\n            \"Choices\": [\n       \
+          \         {\n                    \"Variable\": \"$.checkServiceRole.exists\"\
+          ,\n                    \"BooleanEquals\": false,\n                    \"\
+          Next\": \"createServiceRole\"\n                },\n                {\n \
+          \                   \"Variable\": \"$.checkServiceRole.exists\",\n     \
+          \               \"BooleanEquals\": true,\n                    \"Next\":\
+          \ \"provisionGreengrass\"\n                }\n            ]\n        },\n\
+          \        \"createServiceRole\": {\n            \"Type\": \"Task\",\n   \
+          \         \"Resource\": \"${CreateServiceRole.Arn}\",\n            \"ResultPath\"\
+          : \"$.createServiceRole\",\n            \"Next\": \"provisionGreengrass\"\
+          \n        },\n        \"provisionGreengrass\": {\n                \"Type\"\
+          : \"Parallel\",\n                \"Next\": \"createSubscriptionDefinition\"\
+          ,\n                \"ResultPath\": \"$.provisionGreengrass\",\n        \
+          \        \"Branches\":[\n                    {\n                       \
+          \ \"StartAt\": \"createGreengrassGroup\",\n                        \"States\"\
+          :{\n                            \"createGreengrassGroup\": {\n         \
+          \                       \"Type\": \"Task\",\n                          \
+          \      \"Resource\": \"${CreateGreengrassGroup.Arn}\",\n               \
+          \                 \"ResultPath\": \"$.createGreengrassGroup\",\n       \
+          \                         \"Next\": \"attachGreengrassPolicy\"\n       \
+          \                     },\n                            \"attachGreengrassPolicy\"\
+          : {\n                                \"Type\": \"Task\",\n             \
+          \                   \"Resource\": \"${AttachGreengrassPolicyToCert.Arn}\"\
+          ,\n                                \"ResultPath\": \"$.attachGreengrassPolicy\"\
+          ,\n                                \"End\": true\n                     \
+          \       }\n                        }\n                    },\n         \
+          \           {\n                        \"StartAt\": \"createCoreDefinition\"\
+          ,\n                        \"States\":{\n                            \"\
+          createCoreDefinition\": {\n                                \"Type\": \"\
+          Task\",\n                                \"Resource\": \"${CreateGreengrassCoreDefinition.Arn}\"\
+          ,  \n                                \"End\": true\n                   \
+          \         }\n                        }\n                    },\n       \
+          \             {\n                        \"StartAt\": \"createLambdaFunction\"\
+          ,\n                        \"States\": {\n                            \"\
+          createLambdaFunction\": {\n                                \"Type\": \"\
+          Task\",\n                                \"Resource\": \"${CreateGreengrassLambdaFunction.Arn}\"\
+          ,\n                                \"ResultPath\": \"$.createLambdaFunction\"\
+          ,\n                                \"Next\": \"createFunctionDefinition\"\
+          \n                            },\n                            \"createFunctionDefinition\"\
+          : {\n                                \"Type\": \"Task\",\n             \
+          \                   \"Resource\": \"${CreateGreengrassFunctionDefinition.Arn}\"\
+          ,\n                                \"ResultPath\": \"$.createFunctionDefinition\"\
+          ,\n                                \"End\": true\n                     \
+          \       }\n                        }\n                    },\n         \
+          \           {\n                        \"StartAt\": \"createDeviceDefinition\"\
+          ,\n                        \"States\":{\n                            \"\
+          createDeviceDefinition\": {\n                                \"Type\": \"\
+          Task\",\n                                \"Resource\": \"${CreateGreengrassDeviceDefinition.Arn}\"\
+          ,  \n                                \"End\": true\n                   \
+          \         }\n                        }\n                    },\n       \
+          \             {\n                        \"StartAt\": \"createLoggerDefinition\"\
+          ,\n                        \"States\":{\n                            \"\
+          createLoggerDefinition\": {\n                                \"Type\": \"\
+          Task\",\n                                \"Resource\": \"${CreateGreengrassLoggerDefinition.Arn}\"\
+          ,  \n                                \"End\": true\n                   \
+          \         }\n                        }\n                    },\n       \
+          \             {\n                        \"StartAt\": \"addConfigFile\"\
+          ,\n                        \"States\":{\n                            \"\
+          addConfigFile\": {\n                                \"Type\": \"Task\",\n\
+          \                                \"Resource\": \"${AddGreengrassConfigFile.Arn}\"\
+          ,  \n                                \"End\": true\n                   \
+          \         }\n                        }\n                    }\n        \
+          \        ]\n            },\n        \"createSubscriptionDefinition\": {\n\
+          \            \"Type\": \"Task\",\n            \"Resource\": \"${CreateGreengrassSubscriptionDefinition.Arn}\"\
+          ,\n            \"Next\": \"createGroupVersion\",\n            \"ResultPath\"\
+          : \"$.createSubscriptionDefinition\"\n        },\n        \"createGroupVersion\"\
+          : {\n            \"Type\": \"Task\",\n            \"Resource\": \"${CreateGreengrassGroupVersion.Arn}\"\
+          ,\n            \"ResultPath\": \"$.createGroupVersion\",\n            \"\
+          Next\": \"finished\"\n        },\n        \"finished\": {\n            \"\
+          Type\": \"Succeed\"\n        }\n    }\n}\n"
+      RoleArn:
+        Fn::GetAtt:
+        - ProvisionRole
+        - Arn
+    Type: AWS::StepFunctions::StateMachine
+  PublishTankLevelEvent:
+    Properties:
+      CodeUri: PublishTankLevelEvent
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TankLevelEventsTable
+          TOPIC_ARN:
+            Ref: TankLevelEvents
+      Events:
+        RepublishForIotEvents:
+          Properties:
+            Sql: SELECT * from 'tanks/tankLevelEvent'
+          Type: IoTRule
+      Handler: publishTankLevelEvent.publishTankLevelEvent
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - dynamodb:PutItem
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - TankLevelEventsTable
+            - Arn
+        - Action:
+          - sns:Publish
+          Effect: Allow
+          Resource:
+            Ref: TankLevelEvents
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  PutMetricData:
+    Properties:
+      CodeUri: PutMetricData
+      Events:
+        RepublishForIotEvents:
+          Properties:
+            Sql: SELECT topic(2) as dimension, telemetry from 'tanks/+/telemetry'
+          Type: IoTRule
+      Handler: putMetricData.putMetricData
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - cloudwatch:PutMetricData
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  QueryTankThresholdEvents:
+    Properties:
+      CodeUri: QueryTankThresholdEvents
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: TankLevelEventsTable
+      Handler: queryEvents.queryEvents
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - dynamodb:Query
+          Effect: Allow
+          Resource:
+            Fn::GetAtt:
+            - TankLevelEventsTable
+            - Arn
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+      Timeout: 15
+    Type: AWS::Serverless::Function
+  RemoveThing:
+    Properties:
+      DefinitionString:
+        Fn::Sub: "{\n    \"Comment\":\"If the thing exists, delete it and any cert\
+          \ and policy attached to it.\",\n    \"StartAt\":\"fetchThing\",\n    \"\
+          States\":{\n        \"fetchThing\":{\n            \"Type\":\"Task\",\n \
+          \           \"Resource\":\"${CheckIfThingExists.Arn}\",\n            \"\
+          Next\":\"doesThingExists\"\n        },\n        \"doesThingExists\":{\n\
+          \            \"Type\":\"Choice\",\n            \"Choices\":[\n         \
+          \       {\n                    \"Variable\":\"$.exists\",\n            \
+          \        \"BooleanEquals\":false,\n                    \"Next\":\"thingDoesNotExistsFail\"\
+          \n                },\n                {\n                    \"Variable\"\
+          :\"$.exists\",\n                    \"BooleanEquals\":true,\n          \
+          \          \"Next\":\"checkForGreengrass\"\n                }\n        \
+          \    ]\n        },\n        \"checkForGreengrass\":{\n            \"Type\"\
+          :\"Task\",\n            \"Resource\":\"${CheckForGreengrass.Arn}\",\n  \
+          \          \"ResultPath\":\"$.checkForGreengrass\",\n            \"Next\"\
+          :\"doesGreengrassExists\"\n        },\n        \"doesGreengrassExists\"\
+          :{\n            \"Type\":\"Choice\",\n            \"Choices\":[\n      \
+          \          {\n                    \"Variable\":\"$.checkForGreengrass.greengrass\"\
+          ,\n                    \"BooleanEquals\":false,\n                    \"\
+          Next\":\"disableCert\"\n                },\n                {\n        \
+          \            \"Variable\":\"$.checkForGreengrass.greengrass\",\n       \
+          \             \"BooleanEquals\":true,\n                    \"Next\":\"getGreengrassGroup\"\
+          \n                }\n            ]\n        },\n        \"getGreengrassGroup\"\
+          :{\n            \"Type\":\"Task\",\n            \"Resource\":\"${GetGreengrassGroup.Arn}\"\
+          ,\n            \"ResultPath\":\"$.greengrass\",\n            \"Next\":\"\
+          deprovisionGreengrass\"\n        },\n        \"deprovisionGreengrass\":{\n\
+          \            \"Type\":\"Parallel\",\n            \"ResultPath\":\"$.deprovisionGreengrass\"\
+          ,\n            \"Next\":\"disableCert\",\n            \"Branches\":[\n \
+          \               {\n                    \"StartAt\":\"deleteCoreDefinition\"\
+          ,\n                    \"States\":{\n                        \"deleteCoreDefinition\"\
+          :{\n                            \"Type\":\"Task\",\n                   \
+          \         \"Resource\":\"${DeleteGreengrassCoreDefinition.Arn}\",\n    \
+          \                        \"End\":true\n                        }\n     \
+          \               }\n                },\n                {\n             \
+          \       \"StartAt\":\"deleteDeviceDefinition\",\n                    \"\
+          States\":{\n                        \"deleteDeviceDefinition\":{\n     \
+          \                       \"Type\":\"Task\",\n                           \
+          \ \"Resource\":\"${DeleteGreengrassDeviceDefinition.Arn}\",\n          \
+          \                  \"End\":true\n                        }\n           \
+          \         }\n                },\n                {\n                   \
+          \ \"StartAt\":\"deleteFunctionDefinition\",\n                    \"States\"\
+          :{\n                        \"deleteFunctionDefinition\":{\n           \
+          \                 \"Type\":\"Task\",\n                            \"Resource\"\
+          :\"${DeleteGreengrassFunctionDefinition.Arn}\",\n                      \
+          \      \"ResultPath\":\"$.deleteFunctionDefinition\",\n                \
+          \            \"Next\":\"deleteLambdaFunction\"\n                       \
+          \ },\n                        \"deleteLambdaFunction\":{\n             \
+          \               \"Type\":\"Task\",\n                            \"Resource\"\
+          :\"${DeleteGreengrassLambdaFunction.Arn}\",\n                          \
+          \  \"End\":true\n                        }\n                    }\n    \
+          \            },\n                {\n                    \"StartAt\":\"deleteLoggerDefinition\"\
+          ,\n                    \"States\":{\n                        \"deleteLoggerDefinition\"\
+          :{\n                            \"Type\":\"Task\",\n                   \
+          \         \"Resource\":\"${DeleteGreengrassLoggerDefinition.Arn}\",\n  \
+          \                          \"End\":true\n                        }\n   \
+          \                 }\n                },\n                {\n           \
+          \         \"StartAt\":\"deleteSubscriptionDefinition\",\n              \
+          \      \"States\":{\n                        \"deleteSubscriptionDefinition\"\
+          :{\n                            \"Type\":\"Task\",\n                   \
+          \         \"Resource\":\"${DeleteGreengrassSubscriptionDefinition.Arn}\"\
+          ,\n                            \"End\":true\n                        }\n\
+          \                    }\n                },\n                {\n        \
+          \            \"StartAt\":\"deleteResourceDefinition\",\n               \
+          \     \"States\":{\n                        \"deleteResourceDefinition\"\
+          :{\n                            \"Type\":\"Task\",\n                   \
+          \         \"Resource\":\"${DeleteGreengrassResourceDefinition.Arn}\",\n\
+          \                            \"End\":true\n                        }\n \
+          \                   }\n                },\n                {\n         \
+          \           \"StartAt\":\"resetDeployments\",\n                    \"States\"\
+          :{\n                        \"resetDeployments\":{\n                   \
+          \         \"Type\":\"Task\",\n                            \"Resource\":\"\
+          ${ResetGroupDeployments.Arn}\",\n                            \"ResultPath\"\
+          :\"$.resetDeployments\",\n                            \"Next\":\"deleteGreengrassGroup\"\
+          \n                        },\n                        \"deleteGreengrassGroup\"\
+          :{\n                            \"Type\":\"Task\",\n                   \
+          \         \"Resource\":\"${DeleteGreengrassGroup.Arn}\",\n             \
+          \               \"End\":true\n                        }\n              \
+          \      }\n                },\n                {\n                    \"\
+          StartAt\":\"detachDeletePolicy\",\n                    \"States\":{\n  \
+          \                      \"detachDeletePolicy\":{\n                      \
+          \      \"Type\":\"Task\",\n                            \"Resource\":\"${DetachDeleteGreengrassPolicy.Arn}\"\
+          ,\n                            \"End\":true\n                        }\n\
+          \                    }\n                }\n            ]\n        },\n \
+          \       \"thingDoesNotExistsFail\":{\n            \"Type\":\"Fail\",\n \
+          \           \"Error\":\"Thing does not already exists.\"\n        },\n \
+          \       \"disableCert\":{\n            \"Type\":\"Task\",\n            \"\
+          Resource\":\"${DisableCert.Arn}\",\n            \"Next\":\"detachEntities\"\
+          \n        },\n        \"detachEntities\":{\n            \"Type\":\"Parallel\"\
+          ,\n            \"Next\":\"checkDetachments\",\n            \"Branches\"\
+          :[\n                {\n                    \"StartAt\":\"detachPolicyFromCert\"\
+          ,\n                    \"States\":{\n                        \"detachPolicyFromCert\"\
+          :{\n                            \"Type\":\"Task\",\n                   \
+          \         \"Resource\":\"${DetachPolicyFromCert.Arn}\",\n              \
+          \              \"End\":true\n                        }\n               \
+          \     }\n                },\n                {\n                    \"StartAt\"\
+          :\"detachCertFromThing\",\n                    \"States\":{\n          \
+          \              \"detachCertFromThing\":{\n                            \"\
+          Type\":\"Task\",\n                            \"Resource\":\"${DetachCertFromThing.Arn}\"\
+          ,\n                            \"End\":true\n                        }\n\
+          \                    }\n                }\n            ]\n        },\n \
+          \       \"checkDetachments\":{\n            \"Type\":\"Pass\",\n       \
+          \     \"Next\":\"deleteResources\",\n            \"OutputPath\":\"$[0]\"\
+          \n        },\n        \"deleteResources\":{\n            \"Type\":\"Parallel\"\
+          ,\n            \"OutputPath\":\"$[1]\",\n            \"Next\":\"deleteMetadata\"\
+          ,\n            \"Branches\":[\n                {\n                    \"\
+          StartAt\":\"deleteCert\",\n                    \"States\":{\n          \
+          \              \"deleteCert\":{\n                            \"Type\":\"\
+          Task\",\n                            \"Resource\":\"${DeleteCert.Arn}\"\
+          ,\n                            \"End\":true\n                        }\n\
+          \                    }\n                },\n                {\n        \
+          \            \"StartAt\":\"deleteThing\",\n                    \"States\"\
+          :{\n                        \"deleteThing\":{\n                        \
+          \    \"Type\":\"Task\",\n                            \"Resource\":\"${DeleteThing.Arn}\"\
+          ,\n                            \"End\":true\n                        }\n\
+          \                    }\n                }\n            ]\n        },\n \
+          \       \"deleteMetadata\":{\n            \"Type\":\"Task\",\n         \
+          \   \"Resource\":\"${DeleteMetadata.Arn}\",\n            \"End\":true\n\
+          \        }\n    }\n}\n"
+      RoleArn:
+        Fn::GetAtt:
+        - ProvisionRole
+        - Arn
+    Type: AWS::StepFunctions::StateMachine
+  RepublishTelemetry:
+    Properties:
+      CodeUri: RepublishTelemetry
+      Events:
+        RepublishForIotEvents:
+          Properties:
+            Sql: SELECT topic(2) as tankId, telemetry FROM 'tanks/+/telemetry'
+          Type: IoTRule
+      Handler: republishTelemetry.republishTelemetry
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iot:DescribeEndpoint
+          - iot:Publish
+          Effect: Allow
+          Resource: '*'
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  ResetGroupDeployments:
+    Properties:
+      CodeUri: ResetGroupDeployments
+      Handler: resetGroupDeployments.resetGroupDeployments
+      Policies:
+      - AWSLambdaExecute
+      - AWSGreengrassResourceAccessRolePolicy
+      - AWSGreengrassFullAccess
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  TankLevelDetectorModel:
+    Properties:
+      DetectorModelDefinition:
+        InitialStateName: initializing
+        States:
+        - OnEnter:
+            Events:
+            - Actions:
+              - IotTopicPublish:
+                  MqttTopic: tanks/tankLevelEvent
+              Condition: $variable.backToNormal == true
+              EventName: Publish Event
+          OnInput:
+            Events:
+            - Actions:
+              - SetVariable:
+                  Value:
+                    Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel
+                  VariableName: tankLevel
+              Condition: true
+              EventName: Set tank level
+            - Actions:
+              - SetVariable:
+                  Value: true
+                  VariableName: minThresholdExceeded
+              Condition:
+                Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel < $variable.minThreshold
+              EventName: Min Threshold Exceeded
+            - Actions:
+              - SetVariable:
+                  Value: true
+                  VariableName: maxThresholdExceeded
+              Condition:
+                Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel > $variable.maxThreshold
+              EventName: Max Threshold Exceeded
+            TransitionEvents:
+            - Condition:
+                Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel < $variable.minThreshold
+                  || $input.${TankLevelInput}.sensorData.tankLevel > $variable.maxThreshold
+              EventName: thresholdExceeded
+              NextState: dangerous
+          StateName: normal
+        - OnEnter:
+            Events:
+            - Actions:
+              - IotTopicPublish:
+                  MqttTopic: tanks/tankLevelEvent
+              Condition: true
+              EventName: Publish Event
+          OnInput:
+            Events:
+            - Actions:
+              - SetVariable:
+                  Value:
+                    Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel
+                  VariableName: tankLevel
+              Condition: true
+              EventName: Set tank level
+            - Actions:
+              - SetVariable:
+                  Value: false
+                  VariableName: minThresholdExceeded
+              Condition:
+                Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel >= $variable.minThreshold
+              EventName: Min Threshold Back Ok
+            - Actions:
+              - SetVariable:
+                  Value: false
+                  VariableName: maxThresholdExceeded
+              Condition:
+                Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel <= $variable.maxThreshold
+              EventName: Max Threshold Back OK
+            TransitionEvents:
+            - Actions:
+              - SetVariable:
+                  Value: true
+                  VariableName: backToNormal
+              Condition:
+                Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel >= $variable.minThreshold
+                  && $input.${TankLevelInput}.sensorData.tankLevel <= $variable.maxThreshold
+              EventName: backToNormal
+              NextState: normal
+          StateName: dangerous
+        - OnEnter:
+            Events:
+            - Actions:
+              - SetVariable:
+                  Value: 15
+                  VariableName: minThreshold
+              - SetVariable:
+                  Value: 85
+                  VariableName: maxThreshold
+              - SetVariable:
+                  Value: false
+                  VariableName: minThresholdExceeded
+              - SetVariable:
+                  Value: false
+                  VariableName: maxThresholdExceeded
+              - SetVariable:
+                  Value:
+                    Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel
+                  VariableName: tankLevel
+              Condition: true
+              EventName: Initialize variables
+          OnInput:
+            Events:
+            - Actions:
+              - SetVariable:
+                  Value:
+                    Fn::Sub: $input.${TankLevelInput}.sensorData.tankLevel
+                  VariableName: tankLevel
+              Condition: true
+              EventName: Set tank level
+            TransitionEvents:
+            - Condition: true
+              EventName: normal
+              NextState: normal
+          StateName: initializing
+      DetectorModelDescription: Detects and alerts when tank level goes beyong high
+        and hich-hich thresholds
+      DetectorModelName: TankLevelThresholds
+      Key: tankId
+      RoleArn:
+        Fn::GetAtt:
+        - IoTEventsRole
+        - Arn
+    Type: AWS::IoTEvents::DetectorModel
+  TankLevelEvents:
+    Type: AWS::SNS::Topic
+  TankLevelEventsTable:
+    Properties:
+      AttributeDefinitions:
+      - AttributeName: tankId
+        AttributeType: S
+      - AttributeName: recordedAt
+        AttributeType: S
+      KeySchema:
+      - AttributeName: tankId
+        KeyType: HASH
+      - AttributeName: recordedAt
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    Type: AWS::DynamoDB::Table
+  TankLevelInput:
+    Properties:
+      InputDefinition:
+        Attributes:
+        - JsonPath: tankId
+        - JsonPath: sensorData.tankLevel
+      InputDescription: Tank Level (%)
+      InputName: tankLevel
+    Type: AWS::IoTEvents::Input
+  ThingsTable:
+    Properties:
+      PrimaryKey:
+        Name: thingName
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    Type: AWS::Serverless::SimpleTable
+  User:
+    Properties:
+      DesiredDeliveryMediums:
+      - EMAIL
+      UserAttributes:
+      - Name: email
+        Value:
+          Ref: Username
+      UserPoolId:
+        Ref: UserPool
+      Username:
+        Ref: Username
+    Type: AWS::Cognito::UserPoolUser
+  UserPool:
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
+        InviteMessageTemplate:
+          EmailMessage:
+            Fn::Sub: '<p>You are invited to join the AWS IoT Water Tank Workshop.
+              Your temporary password is as follows:</p>
+
+              <p>
+
+              username: {username} <br />
+
+              Password: <strong>{####}</strong>
+
+              </p>
+
+              <p>
+
+              Please sign in to the GUI with your username and temporary password
+              provided above.
+
+              </p>
+
+              '
+          EmailSubject: Your temporary password for the AWS IoT Water Tank Workshop
+      AutoVerifiedAttributes:
+      - email
+      EmailVerificationMessage: Your AWS IoT Water Tank Workshop verification code
+        is {####}.
+      MfaConfiguration: 'OFF'
+      Schema:
+      - AttributeDataType: String
+        Name: email
+        Required: true
+      UsernameAttributes:
+      - email
+    Type: AWS::Cognito::UserPool
+  UserPoolClient:
+    Properties:
+      GenerateSecret: false
+      RefreshTokenValidity: 200
+      UserPoolId:
+        Ref: UserPool
+    Type: AWS::Cognito::UserPoolClient
+  batchPutMessage:
+    Properties:
+      CodeUri: batchPutMessage
+      Events:
+        RepublishForIotEvents:
+          Properties:
+            Sql: SELECT * FROM 'tanks/+/checkThresholds'
+          Type: IoTRule
+      Handler: batchPutMessage.batchPutMessage
+      Policies:
+      - AWSLambdaExecute
+      - Statement:
+        - Action:
+          - iotevents:BatchPutMessage
+          Effect: Allow
+          Resource:
+            Fn::Sub: arn:aws:iotevents:${AWS::Region}:${AWS::AccountId}:input/${TankLevelInput}
+        Version: '2012-10-17'
+      Runtime: nodejs8.10
+    Type: AWS::Serverless::Function
+  iotKeysAndCertsBucket:
+    Type: AWS::S3::Bucket
+Transform: AWS::Serverless-2016-10-31
