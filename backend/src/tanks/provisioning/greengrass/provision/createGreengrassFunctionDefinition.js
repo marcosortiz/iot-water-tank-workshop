@@ -11,14 +11,24 @@ module.exports = {
 
         var params = {
             InitialVersion: {
+                DefaultConfig: {
+                    Execution: {
+                        IsolationMode: NoContainer
+                    }
+                },
                 Functions: [
                     {
                         Id: `${event.thingName}-Function`,
                         FunctionArn: `${event.createLambdaFunction.FunctionArn}:1`, // use first published version
                         FunctionConfiguration: {
                             Executable: 'greengrassHelloWorld.function_handler',
-                            MemorySize: 128000,
-                            Timeout: 15
+                            Timeout: 25,
+                            Environment: {
+                                Execution: {
+                                    IsolationMode: NoContainer,
+                                }
+                            },
+                            Pinned: true
                         }
                     }
                 ]
