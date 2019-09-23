@@ -5,11 +5,13 @@ var IAM = require('aws-sdk/clients/iam');
 var Lambda = require('aws-sdk/clients/lambda');
 
 AWS.config.region = process.env.AWS_REGION;
+const CODE_BUCKET_PREFIX = 'jonslo-aws-samples-';
+const CODE_KEY = 'aws-greengrass-core-sdk-python/greengrassHelloWorld.zip';
 var lambda = new Lambda();
 var iam = new IAM();
 var responseData = {};
-const S3_BUCKET = 'jonslo-aws-samples-us-west-2';
-const S3_KEY = 'aws-greengrass-core-sdk-python/greengrassHelloWorld.zip';
+const S3_BUCKET = CODE_BUCKET_PREFIX + process.env.AWS_REGION;
+const S3_KEY = CODE_KEY;
 const ROLE_NAME_SUFFIX = 'GreengrassLambdaRole';
 const POLICY_ARNS = [
     'arn:aws:iam::aws:policy/service-role/AWSGreengrassResourceAccessRolePolicy',

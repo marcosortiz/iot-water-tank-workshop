@@ -21,15 +21,15 @@ module.exports = {
         params = {
             RoleName: ROLE_NAME
         };
-        data = iam.listAttachedRolePolicies(params).promise()
+        data = await iam.listAttachedRolePolicies(params).promise()
 
         var i;
         for (i = 0; i < data.AttachedPolicies.length; i++) {
-            params2 = {
+            var params2 = {
                 PolicyArn: data.AttachedPolicies[i].PolicyArn,
                 RoleName: ROLE_NAME
             };
-            iam.detachRolePolicy(params2).promise();
+            await iam.detachRolePolicy(params2).promise();
         }
         
         params = params = {
