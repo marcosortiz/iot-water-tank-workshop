@@ -970,6 +970,8 @@ Resources:
                       Action:
                         - lambda:DeleteFunction
                         - iam:DeleteRole
+                        - iam:DetachRolePolicy
+                        - iam:ListAttachedRolePolicies
                       Resource: '*'
     DeleteGreengrassLoggerDefinition:
         Type: AWS::Serverless::Function
