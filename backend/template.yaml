@@ -1050,7 +1050,7 @@ Resources:
             CodeUri: ./src/tanks/provisioning/greengrass/deprovision/
             Handler: detachDeleteGreengrassPolicy.detachDeleteGreengrassPolicy
             Runtime: nodejs8.10
-                Policies:
+            Policies:
                 - AWSLambdaExecute # Managed Policy
                 - Version: '2012-10-17' # Policy Document
                   Statement:
