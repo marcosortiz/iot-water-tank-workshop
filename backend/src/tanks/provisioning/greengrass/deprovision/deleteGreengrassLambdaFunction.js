@@ -2,7 +2,7 @@
 
 var AWS = require('aws-sdk/global');
 var Lambda = require('aws-sdk/clients/lambda');
-var Lambda = require('aws-sdk/clients/iam');
+var IAM = require('aws-sdk/clients/iam');
 
 AWS.config.region = process.env.AWS_REGION;
 var lambda = new Lambda();
