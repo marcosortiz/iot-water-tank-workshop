@@ -13,7 +13,7 @@ module.exports = {
             InitialVersion: {
                 DefaultConfig: {
                     Execution: {
-                        IsolationMode: NoContainer
+                        IsolationMode: 'NoContainer'
                     }
                 },
                 Functions: [
@@ -25,7 +25,7 @@ module.exports = {
                             Timeout: 25,
                             Environment: {
                                 Execution: {
-                                    IsolationMode: NoContainer,
+                                    IsolationMode: 'NoContainer',
                                 }
                             },
                             Pinned: true
