@@ -50,7 +50,8 @@ module.exports = {
     var certificateId = event.certificateId;
     var thingArn = event.thingArn;
     var iotHost = data.endpointAddress;
-    var prefix = certificateId.substring(0, 10)
+    // var prefix = certificateId.substring(0, 10)
+    var prefix = 'core';
 
     configFile.coreThing.thingArn = thingArn;
     configFile.coreThing.iotHost = iotHost;

@@ -633,6 +633,7 @@ Resources:
                                     # Greengrass Lambda Functions
                                     # PROVISION
                                     - !GetAtt AddGreengrassConfigFile.Arn
+                                    - !GetAtt AttachGreengrassPolicyToCert.Arn
                                     - !GetAtt CheckServiceRole.Arn
                                     - !GetAtt CreateServiceRole.Arn
                                     - !GetAtt CreateGreengrassGroup.Arn
@@ -646,15 +647,17 @@ Resources:
                                     - !GetAtt CreateGreengrassGroupVersion.Arn
                                     # DEPROVISION
                                     - !GetAtt CheckForGreengrass.Arn
-                                    - !GetAtt GetGreengrassGroup.Arn
-                                    - !GetAtt DeleteGreengrassGroup.Arn
                                     - !GetAtt DeleteGreengrassCoreDefinition.Arn
                                     - !GetAtt DeleteGreengrassDeviceDefinition.Arn
-                                    - !GetAtt DeleteGreengrassLoggerDefinition.Arn
                                     - !GetAtt DeleteGreengrassFunctionDefinition.Arn
+                                    - !GetAtt DeleteGreengrassGroup.Arn
+                                    - !GetAtt DeleteGreengrassLambdaFunction.Arn
+                                    - !GetAtt DeleteGreengrassLoggerDefinition.Arn
                                     - !GetAtt DeleteGreengrassResourceDefinition.Arn
                                     - !GetAtt DeleteGreengrassSubscriptionDefinition.Arn
-                                    # - !GetAtt DeleteGreengrassLambdaFunction.Arn
+                                    - !GetAtt DetachDeleteGreengrassPolicy.Arn
+                                    - !GetAtt GetGreengrassGroup.Arn
+                                    - !GetAtt ResetGroupDeployments.Arn
 
     # Greengrass Lambda Functions
     # PROVISION GREENGRASS
@@ -676,6 +679,24 @@ Resources:
                         - iot:DescribeEndpoint
                         - s3:GetObject
                         - s3:PutObject
+                      Resource: '*'
+    AttachGreengrassPolicyToCert:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/tanks/provisioning/greengrass/provision
+            Handler: attachGreengrassPolicyToCert.attachGreengrassPolicyToCert
+            Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    ACCOUNT_ID: !Ref AWS::AccountId
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:AttachPolicy
+                        - iot:CreatePolicy
                       Resource: '*'
     CheckServiceRole:
         Type: AWS::Serverless::Function
@@ -935,6 +956,20 @@ Resources:
                       Action:
                         - greengrass:DeleteFunctionDefinition
                       Resource: '*'
+    DeleteGreengrassLambdaFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision
+            Handler: deleteGreengrassLambdaFunction.deleteGreengrassLambdaFunction
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - lambda:DeleteFunction
+                      Resource: '*'
     DeleteGreengrassLoggerDefinition:
         Type: AWS::Serverless::Function
         Properties:
@@ -1009,6 +1044,21 @@ Resources:
                       Action:
                         - dynamodb:Query
                       Resource: !GetAtt TankLevelEventsTable.Arn
+    DetachDeleteGreengrassPolicy:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision/
+            Handler: detachDeleteGreengrassPolicy.detachDeleteGreengrassPolicy
+            Runtime: nodejs8.10
+                Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iot:DetachPolicy
+                        - iot:DeletePolicy
+                      Resource: '*'
     Publish:
         Type: AWS::Serverless::Function
         Properties:
@@ -1028,7 +1078,16 @@ Resources:
                       Action:
                         - iot:DescribeEndpoint
                       Resource: '*'
-
+    ResetGroupDeployments:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/tanks/provisioning/greengrass/deprovision/
+            Handler: resetGroupDeployments.resetGroupDeployments
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - AWSGreengrassResourceAccessRolePolicy
+                - AWSGreengrassFullAccess # Managed Policy
 
     # Step Functions
     ProvisionThing:
@@ -1180,6 +1239,13 @@ Resources:
                                             "createGreengrassGroup": {
                                                 "Type": "Task",
                                                 "Resource": "${CreateGreengrassGroup.Arn}",
+                                                "ResultPath": "$.createGreengrassGroup",
+                                                "Next": "attachGreengrassPolicy"
+                                            },
+                                            "attachGreengrassPolicy": {
+                                                "Type": "Task",
+                                                "Resource": "${AttachGreengrassPolicyToCert.Arn}",
+                                                "ResultPath": "$.attachGreengrassPolicy",
                                                 "End": true
                                             }
                                         }
@@ -1292,19 +1358,19 @@ Resources:
                         "checkForGreengrass":{
                             "Type":"Task",
                             "Resource":"${CheckForGreengrass.Arn}",
-                            "ResultPath":"$.greengrassExists",
+                            "ResultPath":"$.checkForGreengrass",
                             "Next":"doesGreengrassExists"
                         },
                         "doesGreengrassExists":{
                             "Type":"Choice",
                             "Choices":[
                                 {
-                                    "Variable":"$.greengrassExists",
+                                    "Variable":"$.checkForGreengrass.greengrass",
                                     "BooleanEquals":false,
                                     "Next":"disableCert"
                                 },
                                 {
-                                    "Variable":"$.greengrassExists",
+                                    "Variable":"$.checkForGreengrass.greengrass",
                                     "BooleanEquals":true,
                                     "Next":"getGreengrassGroup"
                                 }
@@ -1347,6 +1413,12 @@ Resources:
                                         "deleteFunctionDefinition":{
                                             "Type":"Task",
                                             "Resource":"${DeleteGreengrassFunctionDefinition.Arn}",
+                                            "ResultPath":"$.deleteFunctionDefinition",
+                                            "Next":"deleteLambdaFunction"
+                                        },
+                                        "deleteLambdaFunction":{
+                                            "Type":"Task",
+                                            "Resource":"${DeleteGreengrassLambdaFunction.Arn}",
                                             "End":true
                                         }
                                     }
@@ -1382,11 +1454,27 @@ Resources:
                                     }
                                 },
                                 {
-                                    "StartAt":"deleteGreengrassGroup",
+                                    "StartAt":"resetDeployments",
                                     "States":{
+                                        "resetDeployments":{
+                                            "Type":"Task",
+                                            "Resource":"${ResetGroupDeployments.Arn}",
+                                            "ResultPath":"$.resetDeployments",
+                                            "Next":"deleteGreengrassGroup"
+                                        },
                                         "deleteGreengrassGroup":{
                                             "Type":"Task",
                                             "Resource":"${DeleteGreengrassGroup.Arn}",
+                                            "End":true
+                                        }
+                                    }
+                                },
+                                {
+                                    "StartAt":"detachDeletePolicy",
+                                    "States":{
+                                        "detachDeletePolicy":{
+                                            "Type":"Task",
+                                            "Resource":"${DetachDeleteGreengrassPolicy.Arn}",
                                             "End":true
                                         }
                                     }
