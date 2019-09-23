@@ -23,6 +23,7 @@ module.exports = {
         };
         data = iam.listAttachedRolePolicies(params).promise()
 
+        var i;
         for (i = 0; i < data.AttachedPolicies.length; i++) {
             params2 = {
                 PolicyArn: data.AttachedPolicies[i].PolicyArn,
