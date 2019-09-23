@@ -29,7 +29,7 @@ module.exports = {
                 PolicyArn: data.AttachedPolicies[i].PolicyArn,
                 RoleName: ROLE_NAME
             };
-            await iam.detachRolePolicy(params2).promise();
+            await await iam.detachRolePolicy(params2).promise();
         }
         
         params = params = {
