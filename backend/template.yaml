@@ -969,6 +969,7 @@ Resources:
                     - Effect: Allow
                       Action:
                         - lambda:DeleteFunction
+                        - iam:DeleteRole
                       Resource: '*'
     DeleteGreengrassLoggerDefinition:
         Type: AWS::Serverless::Function
