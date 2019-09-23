@@ -25,7 +25,7 @@ module.exports = {
             Description: ROLE_DESCRIPTION
         };
 
-        var data = await iam.createRole(params);
+        var data = await iam.createRole(params).promise();
 
         responseData.serviceRoleArn = data.Role.Arn;
 
@@ -34,13 +34,13 @@ module.exports = {
             RoleName: ROLE_NAME
         };
 
-        data = await iam.attachRolePolicy(params);
+        data = await iam.attachRolePolicy(params).promise();
 
         var params = {
             RoleArn: responseData.serviceRoleArn
         };
 
-        data = await greengrass.associateServiceRoleToAccount(params);
+        data = await greengrass.associateServiceRoleToAccount(params).promise();
 
         return responseData;
     }

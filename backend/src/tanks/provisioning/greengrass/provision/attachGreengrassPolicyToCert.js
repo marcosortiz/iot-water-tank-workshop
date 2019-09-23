@@ -31,7 +31,8 @@ module.exports = {
                     ],
                     "Resource": [
                         "arn:aws:iot:region:account-id:topicfilter/$aws/things/core-name-*",
-                        "arn:aws:iot:region:account-id:topic/$aws/things/core-name-*"
+                        "arn:aws:iot:region:account-id:topic/$aws/things/core-name-*",
+                        "*"
                     ]
                 },
                 {
@@ -42,7 +43,8 @@ module.exports = {
                         "iot:DeleteThingShadow"
                     ],
                     "Resource": [
-                        "arn:aws:iot:region:account-id:thing/core-name-*"
+                        "arn:aws:iot:region:account-id:thing/core-name-*",
+                        "*"
                     ]
                 },
                 {
