@@ -3,9 +3,11 @@ On this lab, we want to focus on how we are processing the telemetry data being 
 
 > **Note**: For documentation purpose, we will assume we are monitoring **Tank1**. If you are using another tank, please replace any occurances of **Tank1** by your tank name. 
 
-## AWS IoT Core MQTT Topics Structure
+## Architecure
 The picture bellow, illustrates how we are processing each tank telemetry data as they are pushed to AWS IoT Core.
 ![](../imgs/lab3/fig1.png)
+
+> **Note:** We are highlighting the MQTT topics that we will be inspecting on this lab.
 
 When each tank published its telemetry data every 15 seconds, we process that data in the following order:
 
@@ -31,7 +33,7 @@ This MQTT topic has an AWS IoT rule that sends that information to AWS IoT Event
 On [Lab 4](4-iot-events.md), we will setup AWS IoT Events to detect the tank status and publish it to this MQTT topic.
 </details>
 
-## Inspecting Message Payloads on MQTT Topics
+## Step 1) Inspecting Message Payloads on MQTT Topics
 Lets inspect the message payload on the **tanks/+/telemetry** and **tanks/+/checkThresholds** MQTT topics (we will check **tanks/+/checkThresholds** on [Lab 4](4-iot-events.md)).
 
 You can check the message payloads by using the AWS IoT Core Console. To do that, please follow these steps:

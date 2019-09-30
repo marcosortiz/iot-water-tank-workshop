@@ -1,7 +1,7 @@
 # Lab 2 - Using The Web Application
 It is very common on real IoT usecases to have a web and/or mobile application that allow your users to monitor your IoT devices. In this workshop, you will be using the web application to monitor your water tank.
 
-> **Note**: In fact, if you want, you will be able to see data for any tank being used by other attendees on this builder session. For documentation purpose, we will assume we are monitoring **Tank1**. If you are using another tank, please replace any occurances of **Tank1** by your tank name. 
+> **Note:** In fact, if you want, you will be able to see data for any tank being used by other attendees on this builder session. For documentation purpose, we will assume we are monitoring **Tank1**. If you are using another tank, please replace any occurances of **Tank1** by your tank name. 
 
 ## Overall Architecture
 The picture bellow, illustrates the overall architecture of how this web application interacts with AWS services.

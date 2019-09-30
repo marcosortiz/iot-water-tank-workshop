@@ -42,5 +42,4 @@ The animation bellow will give you an idea of what the user experience is like o
 - [Lab 2 - Using The Web Application](docs/instructions/2-webapp.md)
 - [Lab 3 - AWS IoT Core Data Flow](docs/instructions/3-iot-core-data-flow.md)
 - [Lab 4 - Setting up AWS IoT Events](docs/instructions/4-iot-events.md)
-- [Lab 5 - Setting up Tank Level Notifications](docs/instructions/5-sns-notifications.md)
 - [Appendix](docs/appendix/appendix.md)
