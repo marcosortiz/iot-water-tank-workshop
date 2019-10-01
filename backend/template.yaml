@@ -632,6 +632,7 @@ Resources:
                                     - !GetAtt DisableCert.Arn
                                     # Greengrass Lambda Functions
                                     # PROVISION
+                                    - !GetAtt ProvisionTankUser.Arn
                                     - !GetAtt AddGreengrassConfigFile.Arn
                                     - !GetAtt AttachGreengrassPolicyToCert.Arn
                                     - !GetAtt CheckServiceRole.Arn
@@ -711,6 +712,22 @@ Resources:
                     - Effect: Allow
                       Action:
                         - greengrass:GetServiceRoleForAccount
+                      Resource: '*'
+    ProvisionTankUser:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/tanks/provisioning/iam/provision
+            Handler: provisionTankUser.provisionTankUser
+            Runtime: nodejs8.10
+            Policies:
+                - AWSLambdaExecute # Managed Policy
+                - Version: '2012-10-17' # Policy Document
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - iam:CreateUser
+                        - iam:CreatePolicy
+                        - iam:AttachUserPolicy
                       Resource: '*'
     CreateServiceRole:
         Type: AWS::Serverless::Function
