@@ -25,7 +25,8 @@ module.exports =  {
                 'certificateId': {S: data.certificateId},
                 'certificateArn': {S: data.certificateArn},
                 'policyName': {S: data.policyName},
-                'greengrass': {BOOL: data.includeGreengrass}
+                'greengrass': {BOOL: data.includeGreengrass},
+                'id': {S: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)}
             }
         };
         console.log('ddbParams', ddbParams);
