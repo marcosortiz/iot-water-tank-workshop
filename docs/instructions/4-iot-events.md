@@ -102,8 +102,11 @@ Now that you created the detector model for your tank, lets take a minute to und
    <summary>Now that you understand how your detector model works, take a minute to investigate it (click for details).</summary>
 
    - Open a new tab in your browser and go to the [IoT Events Detector models page](https://us-east-1.console.aws.amazon.com/iotevents/home?region=us-east-1#/detectormodel).
-   - Step 2.
-   - Step 3.
+   - Click **Tank1** on the Name colum and then click **Edit** on the top right.
+   - You should be able to cick the states and transition events and inspect the actions on the form on the right.
+   - When you are done, click on the menu item on the top left and then **Detector models** to make sure you don't apply any changes to your model.
+
+> **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please click on the respective tank link.
 
    ![](../imgs/lab4/fig7.gif)
 </details>
@@ -111,7 +114,59 @@ Now that you created the detector model for your tank, lets take a minute to und
 
 
 ## Step 3) Setup SNS Subscriptions
-**TODO:** Marcos will add description.
+
+Before you can receive text or e-email notifications, you need to make sure you subsribe to the SNS topic. Please follow the following steps to subscribe to **Tank1** notifications:
+
+1. Open a new tab in your browser and go to the [SNS topics page](https://console.aws.amazon.com/sns/v3/home?region=us-east-1#/topics).
+2. Click on the link on the **Name** column for the SNS topic with the name starting with **iot-water-tank-workshop-backend-TankLevelEvents-**.
+3. On the **Subscriptions** tab, click on **Create subscription**.
+   ![](../imgs/lab4/fig8.gif)
+4. Create an e-mail or SMS subscription in order to receive SNS notifications:
+   1. <details>
+         <summary>Create an e-mail subscription</summary>
+
+         > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name.
+
+         1. On the **Protocol** field, select **Email.**.
+         2. On the **Endpoint** field, type a valid e-mail that you can access during this lab.
+         3. Since this SNS topic will receive notifications for all the water tanks on this workshops, you want to use a subscription filter polict, so you only receive notifications for Tank1. In order to do that, expand the **Subscription filter policy** panel and type the text bellow on the **JSON editor**:
+         ```json
+         {
+           "tankId": ["Tank1"]
+         }
+         ```
+         1. Click **Create subscription**.
+         2. Your subscription will show up the a **Pending confirmation** status. To confirm the subscription, check your email inbox for an email from **AWS Notifications** with the title **AWS Notification - Subscription Confirmation**.
+         3. Open that e-mail and click on the **Confirm subscription** link. You should see a web page saying **Subscription confirmed!**.
+         4. Get back to the aws console listing all the subscriptions and refresh the page on your browser. Your subscruptions should now show a **Confirmed** status.
+
+         ![](../imgs/lab4/fig9.gif)
+   </details>
+   
+   2. <details>
+         <summary>Create a SMS subscription</summary>
+
+         > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name.
+
+         1. On the **Subscriptions** tab, click on **Create subscription**.
+         2. **TODO:** Some text goes here:
+         ```json
+         {
+           "tankId": ["Tank1"]
+         }
+         ```
+         1. On the **Protocol** field, select **SMS.**.
+         2. On the **Endpoint** field, type a valid mobile number that can receive notifications from Amazon SNS.
+         3. Since this SNS topic will receive notifications for all the water tanks on this workshops, you want to use a subscription filter polict, so you only receive notifications for Tank1. In order to do that, expand the **Subscription filter policy** panel and type the text bellow on the **JSON editor**:
+         ```json
+         {
+           "tankId": ["Tank1"]
+         }
+         ```
+         1. Click **Create subscription**.
+         ![](../imgs/lab4/fig10.gif)
+
+   </details>
 
 ## Step 4) Inspect MQTT Topic Payload
 **TODO:** Marcos will add description.
