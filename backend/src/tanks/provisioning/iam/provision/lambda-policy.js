@@ -1,4 +1,4 @@
-export default {
+module.exports = {
     LAMBDA_POLICY: {
         "Version": "2012-10-17",
         "Statement": [
@@ -25,7 +25,7 @@ export default {
                 "Resource": [
                     "arn:aws:lambda:*:*:event-source-mapping:*",
                     "arn:aws:lambda:*:*:layer:*:*",
-                    "arn:aws:lambda:*:*:function:FUNCTION_NAME"
+                    "arn:aws:lambda:*:*:function:FUNCTION-NAME"
                 ]
             }
         ]
