@@ -124,49 +124,49 @@ Before you can receive text or e-email notifications, you need to make sure you 
 
 Now you must choose what kind of subscriptions you want to create:
 
-   1. <details>
-         <summary>Create an e-mail subscription (click for details).</summary>
+<details>
+   <summary>Create an e-mail subscription (click for details).</summary>
 
-         > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name.
+   > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name.
 
-         1. On the **Protocol** field, select **Email.**.
-         2. On the **Endpoint** field, type a valid e-mail that you can access during this lab.
-         3. Since this SNS topic will receive notifications for all the water tanks on this workshops, you want to use a subscription filter polict, so you only receive notifications for Tank1. In order to do that, expand the **Subscription filter policy** panel and type the text bellow on the **JSON editor**:
-         ```json
-         {
-           "tankId": ["Tank1"]
-         }
-         ```
-         1. Click **Create subscription**.
-         2. <details>
-               <summary>Make sure you check your e-mail and confirm the subscription (click for details).</summary>
+   1. On the **Protocol** field, select **Email.**.
+   2. On the **Endpoint** field, type a valid e-mail that you can access during this lab.
+   3. Since this SNS topic will receive notifications for all the water tanks on this workshops, you want to use a subscription filter polict, so you only receive notifications for Tank1. In order to do that, expand the **Subscription filter policy** panel and type the text bellow on the **JSON editor**:
+   ```json
+   {
+     "tankId": ["Tank1"]
+   }
+   ```
+   4. Click **Create subscription**.
+   5. <details>
+         <summary>Make sure you check your e-mail and confirm the subscription (click for details).</summary>
 
-               ![](../imgs/lab4/fig9.gif)
+         ![](../imgs/lab4/fig9.gif)
 
-               1. Your subscription will show up the a **Pending confirmation** status. To confirm the subscription, check your email inbox for an email from **AWS Notifications** with the title **AWS Notification - Subscription Confirmation**.
-               2. Open that e-mail and click on the **Confirm subscription** link. You should see a web page saying **Subscription confirmed!**.
-               3. Get back to the aws console listing all the subscriptions and refresh the page on your browser. Your subscruptions should now show a **Confirmed** status.
-            </details>
+         1. Your subscription will show up the a **Pending confirmation** status. To confirm the subscription, check your email inbox for an email from **AWS Notifications** with the title **AWS Notification - Subscription Confirmation**.
+         2. Open that e-mail and click on the **Confirm subscription** link. You should see a web page saying **Subscription confirmed!**.
+         3. Get back to the aws console listing all the subscriptions and refresh the page on your browser. Your subscruptions should now show a **Confirmed** status.
       </details>
+</details>
    
-   2. <details>
-         <summary>Create a SMS subscription (click for details).</summary>
+<details>
+   <summary>Create a SMS subscription (click for details).</summary>
 
-         ![](../imgs/lab4/fig10.gif)
+   ![](../imgs/lab4/fig10.gif)
 
-         > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name.
+   > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name.
 
-         1. On the **Subscriptions** tab, click on **Create subscription**.
-         2. On the **Protocol** field, select **SMS.**.
-         3. On the **Endpoint** field, type a valid mobile number that can receive notifications from Amazon SNS.
-         4. Since this SNS topic will receive notifications for all the water tanks on this workshops, you want to use a subscription filter polict, so you only receive notifications for Tank1. In order to do that, expand the **Subscription filter policy** panel and type the text bellow on the **JSON editor**:
-         ```json
-         {
-           "tankId": ["Tank1"]
-         }
-         ```
-         1. Click **Create subscription**.
-   </details>
+   1. On the **Subscriptions** tab, click on **Create subscription**.
+   2. On the **Protocol** field, select **SMS.**.
+   3. On the **Endpoint** field, type a valid mobile number that can receive notifications from Amazon SNS.
+   4. Since this SNS topic will receive notifications for all the water tanks on this workshops, you want to use a subscription filter polict, so you only receive notifications for Tank1. In order to do that, expand the **Subscription filter policy** panel and type the text bellow on the **JSON editor**:
+   ```json
+   {
+   "tankId": ["Tank1"]
+   }
+   ```
+   5. Click **Create subscription**.
+</details>
 
 ## Step 4) Trigger High Tank Level Notification
 **TODO:** Marcos will add description.
