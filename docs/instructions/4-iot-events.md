@@ -15,50 +15,49 @@ You will leverage AWS IoT Events to create custom conditional logic to monitor y
 For time constraints reasons, you will not create the detector model from scratch. You will leverage an existing template and edit it to create your detector model.
 
 <details>
-    <summary>1) Exporting the detector model template</summary>
-
-- Open a new tab in your browser and go to the [IoT Events Detector models page](https://us-east-1.console.aws.amazon.com/iotevents/home?region=us-east-1#/detectormodel).
-- On the **Detector models** table, click the radio button to the left of the **TankLevelThresholds** detector model and then click **Actions**>**Export detector model**.
-- A pop up dialog will show up, click **Export** and save it as a file on your computer and close the pop up dialog.
+    <summary>1) Exporting the detector model template (click for details).</summary>
 
 ![](../imgs/lab4/fig2.gif)
+1. Open a new tab in your browser and go to the [IoT Events Detector models page](https://us-east-1.console.aws.amazon.com/iotevents/home?region=us-east-1#/detectormodel).
+2. On the **Detector models** table, click the radio button to the left of the **TankLevelThresholds** detector model and then click **Actions**>**Export detector model**.
+3. A pop up dialog will show up, click **Export** and save it as a file on your computer and close the pop up dialog.
 </details>
 
 <details>
-    <summary>2) Editing exported detector model file</summary>
-
-Open the file, replace every occurence of **input.tankLevel** for **input.Tank1** and save it.
-
-> **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name. For example, if you are working on **Tank2**, you will replace every occurence of **input.tankLevel** for **input.Tank2**.
+    <summary>2) Editing exported detector model file (click for details).</summary>
 
 ![](../imgs/lab4/fig3.gif)
+
+1. Open the file, replace every occurence of **input.tankLevel** for **input.Tank1** and save it.
+
+> **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name. For example, if you are working on **Tank2**, you will replace every occurence of **input.tankLevel** for **input.Tank2**.
 </details>
 
 <details>
-    <summary>3) Importing detector model</summary>
+    <summary>3) Importing detector model (click for details).</summary>
 
 > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please replace any occurances of **Tank1** by your tank name.
 
-- Go back to the [IoT Events Detector models page](https://us-east-1.console.aws.amazon.com/iotevents/home?region=us-east-1#/detectormodel). On the **Detector models** table, click **Actions**>**Import detector model**
-- A pop up dialog will show up, click **Import**, select the file you edited and click open.
-- On the top right corner of the screen, click **Publish**.
-- A pop up dialog will open. Change the **Detector model name** from TankLevelThresholds to **Tank1** and click **Save and publish**.
-- On the top right corner of the screen, click **Publish**. You will be redirected to the main detector models screen.
-
 ![](../imgs/lab4/fig4.gif)
+
+1. Go back to the [IoT Events Detector models page](https://us-east-1.console.aws.amazon.com/iotevents/home?region=us-east-1#/detectormodel). On the **Detector models** table, click **Actions**>**Import detector model**
+2. A pop up dialog will show up, click **Import**, select the file you edited and click open.
+3. On the top right corner of the screen, click **Publish**.
+4. A pop up dialog will open. Change the **Detector model name** from TankLevelThresholds to **Tank1** and click **Save and publish**.
+5. On the top right corner of the screen, click **Publish**. You will be redirected to the main detector models screen.
 </details>
 
 <details>
-    <summary>4) Checking your tank state</summary>
+    <summary>4) Checking your tank state (click for details).</summary>
 
 > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please click on the appropriate tank link.
 > 
 
-- On the **Detector models** table, click on **Tank1** link on the **Name** column.
-- On the **Detectors** panel, you should see your tank state up in up to 15 seconds.
-- Click on **Tank1** under the **Key value** column. You will then be able to see more information about your tank on the **Variables** panel.
-
 ![](../imgs/lab4/fig5.gif)
+
+1. On the **Detector models** table, click on **Tank1** link on the **Name** column.
+2. On the **Detectors** panel, you should see your tank state up in up to 15 seconds.
+3. Click on **Tank1** under the **Key value** column. You will then be able to see more information about your tank on the **Variables** panel.
 </details>
 
 
@@ -101,14 +100,14 @@ Now that you created the detector model for your tank, lets take a minute to und
 <details>
    <summary>Now that you understand how your detector model works, take a minute to investigate it (click for details).</summary>
 
-   - Open a new tab in your browser and go to the [IoT Events Detector models page](https://us-east-1.console.aws.amazon.com/iotevents/home?region=us-east-1#/detectormodel).
-   - Click **Tank1** on the Name colum and then click **Edit** on the top right.
-   - You should be able to cick the states and transition events and inspect the actions on the form on the right.
-   - When you are done, click on the menu item on the top left and then **Detector models** to make sure you don't apply any changes to your model.
-
-> **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please click on the respective tank link.
+   > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please click on the respective tank link.
 
    ![](../imgs/lab4/fig7.gif)
+
+   1. Open a new tab in your browser and go to the [IoT Events Detector models page](https://us-east-1.console.aws.amazon.com/iotevents/home?region=us-east-1#/detectormodel).
+   2. Click **Tank1** on the Name colum and then click **Edit** on the top right.
+   3. You should be able to cick the states and transition events and inspect the actions on the form on the right.
+   4. When you are done, click on the menu item on the top left and then **Detector models** to make sure you don't apply any changes to your model.
 </details>
 
 
@@ -117,13 +116,16 @@ Now that you created the detector model for your tank, lets take a minute to und
 
 Before you can receive text or e-email notifications, you need to make sure you subsribe to the SNS topic. Please follow the following steps to subscribe to **Tank1** notifications:
 
+![](../imgs/lab4/fig8.gif)
+
 1. Open a new tab in your browser and go to the [SNS topics page](https://console.aws.amazon.com/sns/v3/home?region=us-east-1#/topics).
 2. Click on the link on the **Name** column for the SNS topic with the name starting with **iot-water-tank-workshop-backend-TankLevelEvents-**.
 3. On the **Subscriptions** tab, click on **Create subscription**.
-   ![](../imgs/lab4/fig8.gif)
-4. Create an e-mail or SMS subscription in order to receive SNS notifications:
+
+Now you must choose what kind of subscriptions you want to create:
+
    1. <details>
-         <summary>Create an e-mail subscription</summary>
+         <summary>Create an e-mail subscription (click for details).</summary>
 
          > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name.
 
@@ -136,42 +138,37 @@ Before you can receive text or e-email notifications, you need to make sure you 
          }
          ```
          1. Click **Create subscription**.
-         2. Your subscription will show up the a **Pending confirmation** status. To confirm the subscription, check your email inbox for an email from **AWS Notifications** with the title **AWS Notification - Subscription Confirmation**.
-         3. Open that e-mail and click on the **Confirm subscription** link. You should see a web page saying **Subscription confirmed!**.
-         4. Get back to the aws console listing all the subscriptions and refresh the page on your browser. Your subscruptions should now show a **Confirmed** status.
+         2. <details>
+               <summary>Make sure you check your e-mail and confirm the subscription (click for details).</summary>
 
-         ![](../imgs/lab4/fig9.gif)
-   </details>
+               ![](../imgs/lab4/fig9.gif)
+
+               1. Your subscription will show up the a **Pending confirmation** status. To confirm the subscription, check your email inbox for an email from **AWS Notifications** with the title **AWS Notification - Subscription Confirmation**.
+               2. Open that e-mail and click on the **Confirm subscription** link. You should see a web page saying **Subscription confirmed!**.
+               3. Get back to the aws console listing all the subscriptions and refresh the page on your browser. Your subscruptions should now show a **Confirmed** status.
+            </details>
+      </details>
    
    2. <details>
-         <summary>Create a SMS subscription</summary>
+         <summary>Create a SMS subscription (click for details).</summary>
+
+         ![](../imgs/lab4/fig10.gif)
 
          > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name.
 
          1. On the **Subscriptions** tab, click on **Create subscription**.
-         2. **TODO:** Some text goes here:
-         ```json
-         {
-           "tankId": ["Tank1"]
-         }
-         ```
-         1. On the **Protocol** field, select **SMS.**.
-         2. On the **Endpoint** field, type a valid mobile number that can receive notifications from Amazon SNS.
-         3. Since this SNS topic will receive notifications for all the water tanks on this workshops, you want to use a subscription filter polict, so you only receive notifications for Tank1. In order to do that, expand the **Subscription filter policy** panel and type the text bellow on the **JSON editor**:
+         2. On the **Protocol** field, select **SMS.**.
+         3. On the **Endpoint** field, type a valid mobile number that can receive notifications from Amazon SNS.
+         4. Since this SNS topic will receive notifications for all the water tanks on this workshops, you want to use a subscription filter polict, so you only receive notifications for Tank1. In order to do that, expand the **Subscription filter policy** panel and type the text bellow on the **JSON editor**:
          ```json
          {
            "tankId": ["Tank1"]
          }
          ```
          1. Click **Create subscription**.
-         ![](../imgs/lab4/fig10.gif)
-
    </details>
 
-## Step 4) Inspect MQTT Topic Payload
-**TODO:** Marcos will add description.
-
-## Step 5) Trigger High Tank Level Notification
+## Step 4) Trigger High Tank Level Notification
 **TODO:** Marcos will add description.
 
 
