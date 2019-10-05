@@ -15,7 +15,7 @@ You will leverage AWS IoT Events to create custom conditional logic to monitor y
 For time constraints reasons, you will not create the detector model from scratch. You will leverage an existing template and edit it to create your detector model.
 
 <details>
-    <summary>1) Exporting the detector model template (click for details).</summary>
+    <summary>1. Exporting the detector model template (click for details).</summary>
 
 ![](../imgs/lab4/fig2.gif)
 1. Open a new tab in your browser and go to the [IoT Events Detector models page](https://us-east-1.console.aws.amazon.com/iotevents/home?region=us-east-1#/detectormodel).
@@ -24,7 +24,7 @@ For time constraints reasons, you will not create the detector model from scratc
 </details>
 
 <details>
-    <summary>2) Editing exported detector model file (click for details).</summary>
+    <summary>2. Editing exported detector model file (click for details).</summary>
 
 ![](../imgs/lab4/fig3.gif)
 
@@ -34,7 +34,7 @@ For time constraints reasons, you will not create the detector model from scratc
 </details>
 
 <details>
-    <summary>3) Importing detector model (click for details).</summary>
+    <summary>3. Importing detector model (click for details).</summary>
 
 > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please replace any occurances of **Tank1** by your tank name.
 
@@ -48,7 +48,7 @@ For time constraints reasons, you will not create the detector model from scratc
 </details>
 
 <details>
-    <summary>4) Checking your tank state (click for details).</summary>
+    <summary>4. Checking your tank state (click for details).</summary>
 
 > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please click on the appropriate tank link.
 > 
@@ -67,7 +67,7 @@ Now that you created the detector model for your tank, lets take a minute to und
 ![](../imgs/lab4/fig6.png)
 
 <details>
-    <summary>Your detector model has 3 states: Initializing, Normal and Dangerous (click for details).</summary>
+    <summary>1. Your detector model has 3 states: Initializing, Normal and Dangerous (click for details).</summary>
 
 1. **Initializing:** After you publish your detector mode, whenever it receives the first input data, it will go to the initializing state. The state has 2 events:
    1. **OnEnter:** Whenever the detector model enters this state, it initializes the following variables:
@@ -87,18 +87,15 @@ Now that you created the detector model for your tank, lets take a minute to und
       2. **maxThresholdExceeded:** set to false if the tank level that we are receiving from the water tank is less than or equal to **maxThreshold** (85%). Otherwise we set it to false.
 </details>
 <details>
-    <summary>And 3 transition events: normal, thresholdExceeded and backToNormal (click for details).</summary>
+    <summary>2. And 3 transition events: normal, thresholdExceeded and backToNormal (click for details).</summary>
 
 1. **normal**: Whenever we enter the **Initializing** state, we will initialize the variables and always transition to the **Normal** state.
 2. **thresholdExceeded:** While in the **Normal** state, whenever the **thresholdExceeded** variable is **true**, we move into the **Dangerous** state.
 3. **backToNormal:** While in the **Dangerous** state, whenever the **thresholdExceeded** variable is **false**, we move into the **Normal** state.
 </details>
 
-<br/>
-
-
 <details>
-   <summary>Now that you understand how your detector model works, take a minute to investigate it (click for details).</summary>
+   <summary>3. Now that you understand how your detector model works, take a minute to investigate it (click for details).</summary>
 
    > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please click on the respective tank link.
 
@@ -122,10 +119,10 @@ Before you can receive text or e-email notifications, you need to make sure you 
 2. Click on the link on the **Name** column for the SNS topic with the name starting with **iot-water-tank-workshop-backend-TankLevelEvents-**.
 3. On the **Subscriptions** tab, click on **Create subscription**.
 
-Now you must choose what kind of subscriptions you want to create:
+Now you must choose what type of subscription you want to create:
 
 <details>
-   <summary>Create an e-mail subscription (click for details).</summary>
+   <summary>1. Create an e-mail subscription (click for details).</summary>
 
    > **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please use your tank name.
 
@@ -150,7 +147,7 @@ Now you must choose what kind of subscriptions you want to create:
 </details>
    
 <details>
-   <summary>Create a SMS subscription (click for details).</summary>
+   <summary>2. Create a SMS subscription (click for details).</summary>
 
    ![](../imgs/lab4/fig10.gif)
 
@@ -169,31 +166,37 @@ Now you must choose what kind of subscriptions you want to create:
 </details>
 
 ## Step 4) Triggering Notifications
-**TODO:** Marcos will add description.
+Now, all you have to do is to change the tank level in order to trigger the notification. Please do the following:
 
+> **Note:** For documentation purpose, we will assume you are monitoring **Tank1**. If you are using another tank, please make sure you monitor your tank on the web app.
+
+1. Open the web application on your browser and keep an eye on it, so you can monitor the **Tank1** level.
+2. Fill up the tank slowly. As you feel it up, you should see the **Tank1** level widget change th tank level value. Please note that telemetry is sent every 15 seconds, so it can take up to 15 seconds for the new tank level value to reflect on the web app.
+3. Once the tank level is **greater than 85%**, the web application should render the widget in red and you should receive a (SMS or e-mail) notification.
+4. Drain the tank slowly. As you drain it, you should see the **Tank1** level widget change th tank level value. Please note that telemetry is sent every 15 seconds, so it can take up to 15 seconds for the new tank level value to reflect on the web app.
+5. Once the tank level is **less or equal to 85%**, the web application should render the widget in red and you should receive a (SMS or e-mail) notification.
+6. If you cliek on **View historical data** for your tank, you should be able to see:
+   1. A chart with the last 15 minutes of tank level chages over time.
+   2. A table logging every tank level **dangerous** or **back to normal** events.
+
+The videos bellow will give you an idea on how to use the web application to monitor the tank and check for notifications:
 
 <details>
-   <summary>Change the tank level to trigger the notifications (click for details).</summary>
+   <summary>1. Change the tank level to trigger the notifications (click for details).</summary>
 
    ![](../imgs/lab4/fig11.gif)
-
-   **TODO:** Marcos to add details.
 </details>
 
 <details>
-   <summary>Check your e-mails for tank level notifications (click for details).</summary>
+   <summary>2. Check your e-mail for tank level notifications (click for details).</summary>
 
    ![](../imgs/lab4/fig12.gif)
-
-   **TODO:** Marcos to add details.
 </details>
 
 <details>
-   <summary>Check your phone for text message notifications (click for details).</summary>
+   <summary>3. Check your phone for text message notifications (click for details).</summary>
 
    ![](../imgs/lab4/fig13.gif)
-
-   **TODO:** Marcos to add details.
 </details>
 
 
