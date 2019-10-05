@@ -168,8 +168,33 @@ Now you must choose what kind of subscriptions you want to create:
    5. Click **Create subscription**.
 </details>
 
-## Step 4) Trigger High Tank Level Notification
+## Step 4) Triggering Notifications
 **TODO:** Marcos will add description.
+
+
+<details>
+   <summary>Change the tank level to trigger the notifications (click for details).</summary>
+
+   ![](../imgs/lab4/fig11.gif)
+
+   **TODO:** Marcos to add details.
+</details>
+
+<details>
+   <summary>Check your e-mails for tank level notifications (click for details).</summary>
+
+   ![](../imgs/lab4/fig12.gif)
+
+   **TODO:** Marcos to add details.
+</details>
+
+<details>
+   <summary>Check your phone for text message notifications (click for details).</summary>
+
+   ![](../imgs/lab4/fig13.gif)
+
+   **TODO:** Marcos to add details.
+</details>
 
 
 ---
