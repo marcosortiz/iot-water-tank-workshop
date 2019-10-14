@@ -1,0 +1,6 @@
+{
+    "region": "us-east-1",
+    "ThingsTable": "iot-water-tank-workshop-ThingsTable-2FIECS8QVUCC",
+    "iotKeysAndCertsBucket": "iot-water-tank-workshop-iotkeysandcertsbucket-1gg02lp4bhq0h",
+    "iotEndpointAddress": "a2t0hfgmbw4n5w.iot.us-east-1.amazonaws.com"
+}
