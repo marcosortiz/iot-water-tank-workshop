@@ -37,6 +37,8 @@ The animation bellow will give you an idea of what the user experience is like o
 
 ## Instructions
 
+Make sure you follow the instructions on the **Prerequisites** section, before you start the labs.
+
 - [Prerequisites](docs/instructions/0-prereqs.md)
 - [Lab 1 - Connecting to AWS IoT Core](docs/instructions/1-connecting-wt-iot-core.md)
 - [Lab 2 - Using The Web Application](docs/instructions/2-webapp.md)

@@ -159,7 +159,7 @@ Now you must choose what type of subscription you want to create:
    4. Since this SNS topic will receive notifications for all the water tanks on this workshops, you want to use a subscription filter polict, so you only receive notifications for Tank1. In order to do that, expand the **Subscription filter policy** panel and type the text bellow on the **JSON editor**:
    ```json
    {
-   "tankId": ["Tank1"]
+     "tankId": ["Tank1"]
    }
    ```
    5. Click **Create subscription**.

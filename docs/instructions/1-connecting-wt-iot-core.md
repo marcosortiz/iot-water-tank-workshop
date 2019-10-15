@@ -14,21 +14,9 @@ Make sure the local network cable is plugged into the top ethernet port (eth0), 
 
 Make sure the Moxa demo unit is plugged into a power source, and turn on the red power switch located at the top-right of the unit.
 
-PICTURE-OF-POWER-BUTTON
-
-## Access the AWS Management Console
-
-Use the provided login URL to access the console sign-on web page.  Using the provided credentials, type in the **IAM user name** and **password**, and click the **Sign In** button.
-
-![Logging in](../imgs/lab1/login.gif)
-
-You should now see the AWS Management Console home page.
-
-![Console](../imgs/lab1/console.png)
-
 ## Find your Greengrass Group
 
-On the AWS Management Console home page, type **greengrass** into the **Find Services** search bar.  Click the **IoT Greengrass** item (the first query result).
+On the [AWS Management Console home page](https://console.aws.amazon.com/console/home?region=us-east-1), type **greengrass** into the **Find Services** search bar.  Click the **IoT Greengrass** item (the first query result).
 
 ![Searching for Greengrass](../imgs/lab1/search-gg.gif)
 
@@ -148,7 +136,7 @@ You should now be in the AWS IoT portal.  Click **Test** in the left hand menu. 
 
 You should now see messages displayed every 15 seconds, coming from your device.  The message should have the following schema:
 
-```
+```json
 {
   "telemetry": [
     {

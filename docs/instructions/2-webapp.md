@@ -11,6 +11,8 @@ The picture bellow, illustrates the overall architecture of how this web applica
 ## Web Application Overview
 This is a ReacJS web application running on S3, behind a CloudFormation distribution. It also uses Amazon Cognito for authentication and authorization.
 
+You can access the web application at [http://bit.ly/aws-water-tank-workshop](http://bit.ly/aws-water-tank-workshop)
+
 After you login, this application will show you a list of water tanks currently provisioned on AWS IoT Core. For each tank, it will:
 
 1. **Display the reported thing shadow state:** After you connected your tank to AWS IoT Core on the previous lab, you tank is reporting its state to the corresponding thing shadow. Each tank, report 2 variables to the shadow:
@@ -124,7 +126,7 @@ For this demo, we used Amazon CloudWatch to store a custom tankLevel metric. Eve
 
 To see historical data for a given tank, follow these steps:
 
-1. Go to the web application page, and click the **View Historical Data** button for your given tank.
+1. Go to [http://bit.ly/aws-water-tank-workshop](http://bit.ly/aws-water-tank-workshop) and click the **View Historical Data** button for your given tank.
 2. A modal window will open. The app will then fetch the last *15 minutes* of tankLevel metric for the given tank from Amazon CloudWatch and plot it on a chart on the screen.
 3. Whenever new telemetry is published by the tank to AWS IoT Core, since our app is subscribing to that topic, it will receive the updates and refresh the chart every 15 seconds.
 

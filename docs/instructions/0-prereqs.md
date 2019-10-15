@@ -10,7 +10,7 @@ We will collect all the attendees e-mails on the beginning of the session. Pleas
 Follow these steps to access the web application:
 
 1. After we register your e-mail, you will receive an e-mail with:
-   1.  **URL:** the web application URL.
+   1.  **URL:** [http://bit.ly/2019oig301](http://bit.ly/2019oig301)
    2.  **Username:** Your username will be your e-mail address.
    3.  **Password**: A temporary password.
 2. Click on the web application URL link. Make sure you open it on Google Chrome or Firefox. Follow the steps bellow to sign in:
@@ -23,10 +23,13 @@ Follow these steps to access the web application:
 
 ## 3) Get access to the AWS account used on this workshop
 
-TODO: Jon will add documentation.
+You will run this workshop on a test AWS account we will provide. Please follow the steps bellow to access the AWS console:
 
-## 4) Getting to know your water tank
-TODO: Jon will add documentation. Do we even need this?
+Access the AWS console at [https://iot-water-tank-workshop.signin.aws.amazon.com/console](https://iot-water-tank-workshop.signin.aws.amazon.com/console). On the **IAM user name** field, type the e-mail address you provided us. On the **Password** field, type your temporary password, **OIG301**. Click **Sign In**.
+
+![Logging in](../imgs/prereqs/login.gif)
+
+You will be asked to change your password. On the **Old password** field, type your temp password: **OIG301**. On the **New password** field, type your new password. On the **Retype new password** field, retype your new password. Click **Confirm password change**.
 
 ---
 [<- Index](../../README.md#Instructions)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-> Lab 1 - Connecting to AWS IoT Core](1-connecting-wt-iot-core.md)
