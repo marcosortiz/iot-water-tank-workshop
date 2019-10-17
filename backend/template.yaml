@@ -646,7 +646,7 @@ Resources:
                                     - !GetAtt CreateGreengrassSubscriptionDefinition.Arn
                                     - !GetAtt CreateGreengrassLambdaFunction.Arn
                                     - !GetAtt CreateGreengrassGroupVersion.Arn
-                                    - !GetAtt Greengrass-HelloWorld.Arn
+                                    - !GetAtt GreengrassHelloWorld.Arn
                                     # DEPROVISION
                                     - !GetAtt CheckForGreengrass.Arn
                                     - !GetAtt DeleteGreengrassCoreDefinition.Arn
@@ -895,7 +895,7 @@ Resources:
                       Action:
                         - greengrass:createGroupVersion
                       Resource: '*'
-    Greengrass-HelloWorld:
+    GreengrassHelloWorld:
         Type: AWS::Serverless::Function
         Properties:
             CodeUri: ./src/tanks/provisioning/greengrass/provision/greengrassHelloWorldLambda
