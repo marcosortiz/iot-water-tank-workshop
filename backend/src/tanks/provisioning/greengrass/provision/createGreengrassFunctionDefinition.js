@@ -19,7 +19,7 @@ module.exports = {
                 Functions: [
                     {
                         Id: `${event.thingName}-Function`,
-                        FunctionArn: `${event.createLambdaFunction.FunctionArn}:1`, // use first published version
+                        FunctionArn: `${process.env.FUNCTION_ARN}:1`, // use first published version
                         FunctionConfiguration: {
                             Executable: 'greengrassHelloWorld.function_handler',
                             Timeout: 25,
