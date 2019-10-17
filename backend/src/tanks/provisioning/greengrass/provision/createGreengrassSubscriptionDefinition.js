@@ -13,7 +13,7 @@ module.exports = {
                 Subscriptions: [
                     {
                         Id: `${event.thingName}-Subscription`,
-                        Source: `${event.provisionGreengrass[2].createLambdaFunction.FunctionArn}:1`, /* required */
+                        Source: `${eprocess.env.FUNCTION_ARN}:1`, /* required */
                         Subject: '#', /* required */
                         Target: 'cloud'
                     }
