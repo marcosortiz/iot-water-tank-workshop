@@ -13,7 +13,7 @@ module.exports = {
                 Subscriptions: [
                     {
                         Id: `${event.thingName}-Subscription`,
-                        Source: `${eprocess.env.FUNCTION_ARN}:1`, /* required */
+                        Source: `${process.env.FUNCTION_ARN}:1`, /* required */
                         Subject: '#', /* required */
                         Target: 'cloud'
                     }
