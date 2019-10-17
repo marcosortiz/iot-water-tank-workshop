@@ -646,6 +646,7 @@ Resources:
                                     - !GetAtt CreateGreengrassSubscriptionDefinition.Arn
                                     - !GetAtt CreateGreengrassLambdaFunction.Arn
                                     - !GetAtt CreateGreengrassGroupVersion.Arn
+                                    - !GetAtt Greengrass-HelloWorld.Arn
                                     # DEPROVISION
                                     - !GetAtt CheckForGreengrass.Arn
                                     - !GetAtt DeleteGreengrassCoreDefinition.Arn
@@ -894,6 +895,15 @@ Resources:
                       Action:
                         - greengrass:createGroupVersion
                       Resource: '*'
+    Greengrass-HelloWorld:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: ./src/tanks/provisioning/greengrass/provision/greengrassHelloWorldLambda
+            Handler: greengrassHelloWorld.function_handler
+            Runtime: python3.7
+            Timeout: 15
+            Policies:
+                - AWSLambdaExecute # Managed Policy
     # DEPROVISION GREENGRASS
     CheckForGreengrass:
         Type: AWS::Serverless::Function
