@@ -819,6 +819,9 @@ Resources:
             CodeUri: ./src/tanks/provisioning/greengrass/provision
             Handler: createGreengrassFunctionDefinition.createGreengrassFunctionDefinition
             Runtime: nodejs8.10
+            Environment:
+                Variables:
+                    FUNCTION_ARN: !GetAtt GreengrassHelloWorld.Arn
             Policies:
                 - AWSLambdaExecute # Managed Policy
                 - Version: '2012-10-17' # Policy Document
