@@ -1,0 +1,1 @@
+scp <keys & cert file> moxa@192.168.1.#:/home/moxa/gg-bootstrap/config
