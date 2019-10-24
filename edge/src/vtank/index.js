@@ -8,7 +8,7 @@ const TankLogger = require(`${__dirname}/logger`);
 var Constants = require(`${__dirname}/constants`);
 var Iot = require(`${__dirname}/iot`);
 
-const DEFAULT_TELEMETRY_INTERVAL = 15000 // in milliseconds
+const DEFAULT_TELEMETRY_INTERVAL = 2000 // in milliseconds
 
 const DEFAULT_INITIAL_TANK_LEVEL = 50;
 const DEFAULT_TARGET_TANK_LEVEL  = 80;
