@@ -22,12 +22,11 @@ module.exports =  {
             Namespace: METRICS_NAMESPACE
         };
         telemetry.forEach(function(datapoint){
-            if (datapoint.recorded_a < 9999999999) { // if the timestamp is in seconds
+            if (datapoint.recorded_at < 9999999999) { // if the timestamp is in seconds
                 last_recorded_at = new Date(datapoint.recorded_at * 1000);
             } else { // if the timestamp is in mulliseconds
                 last_recorded_at = new Date(datapoint.recorded_at);
             }
-            last_recorded_at = new Date(datapoint.recorded_at);
             var metricData = {
                 MetricName: TANK_LEVEL_METRIC,
                 Dimensions: [
