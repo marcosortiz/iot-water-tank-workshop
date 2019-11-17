@@ -27,6 +27,10 @@ module.exports =  {
             } else { // if the timestamp is in mulliseconds
                 last_recorded_at = new Date(datapoint.recorded_at);
             }
+            
+            // check if the date on the device is in the future
+            if (last_recorded_at > now) last_recorded_at = now;
+
             var metricData = {
                 MetricName: TANK_LEVEL_METRIC,
                 Dimensions: [
