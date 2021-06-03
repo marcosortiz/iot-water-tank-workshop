@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Repository:
+    Type: String
+    Description: GitHub Repository URL
+  OauthToken:
+    Type: String
+    Description: GitHub Repository URL
+    NoEcho: true
+  Email:
+      Type: String
+      AllowedPattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"        
+      Description: A valid email address is required
+  WorkshopMode:
+      Type: String
+      Default: 'OFF'
+      AllowedValues:
+        - 'OFF'
+        - 'ON'
+      Description: "Enter ON or OFF."
+
+Resources:
+  AmplifyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - amplify.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/AdministratorAccess
+
+  AmplifyApp:
+    Type: "AWS::Amplify::App"
+    Properties:
+      Name: iot-water-tank-workshop
+      Repository: !Ref Repository
+      Description: AWS IoT Water Tank Workshop
+      OauthToken: !Ref OauthToken
+      EnvironmentVariables:
+        - 
+          Name: USERNAME
+          Value: !Ref Email
+        -
+          Name: STACK_NAME
+          Value: !Sub '${AWS::StackName}-backend'
+        -
+          Name: WORKSHOP_MODE
+          Value: !Sub '${WorkshopMode}'
+      Tags:
+        - 
+          Key: Name
+          Value: iot-water-tank-workshop
+      IAMServiceRole: !GetAtt AmplifyRole.Arn
+
+  AmplifyBranch:
+    Type: AWS::Amplify::Branch
+    Properties:
+      BranchName: dev
+      AppId: !GetAtt AmplifyApp.AppId
+      Description: Dev Branch
+      Tags:
+        - Key: Name
+          Value: iot-water-tank-workshop-dev
+        - Key: Branch
+          Value: dev
+
+Outputs:
+  DefaultDomain:
+    Value: !GetAtt AmplifyApp.DefaultDomain
+#   MasterBranchUrl:
+#     Value: !Join [ ".", [ !GetAtt AmplifyBranch.BranchName, !GetAtt AmplifyDomain.DomainName ]]

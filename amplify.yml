@@ -1,0 +1,34 @@
+version: 0.1
+backend:
+  phases:
+    preBuild:
+      commands:
+        - yum -y install jq
+        - export ACCOUNT_ID=$(aws sts get-caller-identity|jq -r ".Account")
+        - export REGION=$AWS_REGION
+        - DEFAULT_STACK_NAME="iot-water-tank-workshop-${ACCOUNT_ID}"
+        - export STACK_NAME="${STACK_NAME:-$DEFAULT_STACK_NAME}"
+        - echo $STACK_NAME
+        - export SAM_BUCKET="${STACK_NAME}-${REGION}-${ACCOUNT_ID}-sam"
+        - echo $REGION
+        - echo $SAM_BUCKET
+        - echo $STACK_NAME
+    build:
+      commands:
+        - ./bin/deploy-backend.sh
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd frontend
+    build:
+      commands:
+        - ./bin/build.sh
+  artifacts:
+    baseDirectory: frontend/build
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - /
+      - /index.html
