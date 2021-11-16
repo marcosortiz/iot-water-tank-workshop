@@ -5,7 +5,7 @@
   "dependencies": {
     "aws-amplify": "^1.1.29",
     "aws-amplify-react": "^2.3.9",
-    "aws-sdk": "^2.477.0",
+    "aws-sdk": "^2.814.0",
     "moment": "^2.24.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
